@@ -1,0 +1,1 @@
+CALL C:\Users\Michael\Documents\GitHub\bills\gradlew.bat run

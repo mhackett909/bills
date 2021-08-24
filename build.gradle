@@ -1,0 +1,24 @@
+plugins {
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.9'
+
+}
+application {
+    mainClassName = 'Launcher'
+}
+javafx {
+    version = "14.0.1"
+    modules = [ 'javafx.controls' ]
+}
+repositories {
+    mavenCentral()
+}
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.15'
+    runtime "mysql:mysql-connector-java:8.0.15"
+}
+test {
+    useJUnitPlatform()
+}
