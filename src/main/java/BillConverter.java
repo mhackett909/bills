@@ -24,7 +24,7 @@ public class BillConverter {
         writeToDatabase();
         //printBills();
     }
-    static Connection getConnection() throws Exception {
+    private static Connection getConnection() throws Exception {
         Connection conn = null;
         String driver = "com.mysql.cj.jdbc.Driver";
         String url = "jdbc:mysql://localhost:3306/bills";
@@ -37,7 +37,7 @@ public class BillConverter {
     }
 
     //https://stackoverflow.com/questions/428073/what-is-the-best-simplest-way-to-read-in-an-xml-file-in-java-application
-    void loadXML(String file) {
+    private void loadXML(String file) {
         try {
             File fXmlFile = new File(file);
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -71,7 +71,7 @@ public class BillConverter {
             e.printStackTrace();
         }
     }
-    void printBills() {
+    public void printBills() {
         for (int x = 0; x < bills.size(); x++) {
             Bill bill = bills.get(x);
             System.out.println(bill.name + " : "+bill.entries.size());
@@ -85,14 +85,14 @@ public class BillConverter {
             System.out.println();
         }
     }
-    int getBillIndex(String name) {
+    private int getBillIndex(String name) {
         int index = -1;
         for (int x = 0; x < bills.size(); x++) {
             if (bills.get(x).name.toLowerCase().equals(name)) return x;
         }
         return index;
     }
-    boolean duplicateEntry(Bill bill, Entry entry) {
+    private boolean duplicateEntry(Bill bill, Entry entry) {
         boolean dup = false;
         for (int x = 0; x < bill.entries.size(); x++) {
             Entry nextEntry = bill.entries.get(x);
@@ -105,7 +105,7 @@ public class BillConverter {
         }
         return dup;
     }
-    void writeToDatabase() {
+    private void writeToDatabase() {
         try {
             Connection conn = getConnection();
             for (int x = 0; x < bills.size(); x++) {
@@ -117,26 +117,19 @@ public class BillConverter {
                 statement.executeUpdate();
                 ArrayList entries = bills.get(x).entries;
                 for (int y = 0; y < entries.size(); y++) {
-                    statement2 = conn.prepareStatement("INSERT INTO entry(name, date, amount, paid, overpaid, services) " +
-                            "values(?, ?, ?, ?, ?, ?)");
+                    statement2 = conn.prepareStatement("INSERT INTO entry(name, date, amount, status, services) " +
+                            "values(?, ?, ?, ?, ?)");
                     statement2.setString(1, bill);
                     Entry entry = (Entry) entries.get(y);
-                    double amount = Double.parseDouble(entry.amount);
+                    float amount = Float.parseFloat(entry.amount);
                     SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy");
                     java.util.Date parsed = format.parse(entry.date);
                     java.sql.Date sqlDate = new java.sql.Date(parsed.getTime());
                     statement2.setDate(2, sqlDate);
-                    statement2.setDouble(3, amount);
+                    statement2.setFloat(3, amount);
                     boolean isPaid = !entry.paid.equals("Unpaid");
-                    if (!isPaid) {
-                        statement2.setInt(4, 0);
-                        statement2.setString(6, entry.notes);
-                    }
-                    else {
-                        statement2.setInt(4, 1);
-                        statement2.setString(6, "");
-                    }
-                    statement2.setInt(5, 0);
+                    statement2.setInt(4, (isPaid? 1 : 0));
+                    statement2.setString(5, entry.notes);
                     //System.out.println(statement2.toString());
                     statement2.executeUpdate();
                     if (isPaid) {
