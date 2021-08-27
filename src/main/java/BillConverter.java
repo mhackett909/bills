@@ -29,7 +29,7 @@ public class BillConverter {
         String driver = "com.mysql.cj.jdbc.Driver";
         String url = "jdbc:mysql://localhost:3306/bills";
         String username = "root";
-        String password = ""; //TODO DEL PW
+        String password = "password";
         //Class.forName(driver);
         conn = DriverManager.getConnection(url, username, password);
         System.out.println("connected");
