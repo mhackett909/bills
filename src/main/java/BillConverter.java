@@ -54,7 +54,7 @@ public class BillConverter {
                     int index = getBillIndex(name.toLowerCase());
                     Bill bill;
                     if (index == -1) {
-                        bill = new Bill(name);
+                        bill = new Bill(name.strip());
                         bills.add(bill);
                     }else bill = bills.get(index);
                     for (int x = 0; x <  eElement.getElementsByTagName("Entry").getLength(); x++) {

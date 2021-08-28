@@ -3,16 +3,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableView;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
@@ -29,12 +20,18 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Optional;
 
 public class BillView {
     private TableView tview;
-    private Stage primaryStage, searchStage;
+    private Stage primaryStage, searchStage, newStage, editStage;
+    private Stage viewStage, paymentStage, statStage;
     private VBox topSearchBox, leftSearchBox, rightSearchBox;
-    private ComboBox searchCombo;
+    private VBox topNewBox, centerNewBox, centerEditBill;
+    private HBox bottomEditBill;
+    private ComboBox searchCombo, newCombo;
+    private CheckBox newBillchk;
     private ObservableList<Entry> entries;
     private ArrayList<Bill> bills;
 
@@ -50,17 +47,14 @@ public class BillView {
         border.setBottom(hbox2);
 
         primaryStage.setScene(new Scene(border));
-        primaryStage.setTitle("Bill Manager v4.0");
+        primaryStage.setTitle("Bill Manager V4");
         primaryStage.setMinHeight(500);
         primaryStage.setMinWidth(800);
     }
 
     private HBox topHBox() {
-        HBox hbox = new HBox();
-        hbox.setPadding(new Insets(15, 12, 15, 12));
-        hbox.setSpacing(10);
+        HBox hbox = genHBox();
         hbox.setStyle("-fx-background-color: #336699;");
-        hbox.setAlignment(Pos.BASELINE_CENTER);
 
         Button buttonAdd = new Button("New Entry");
         buttonAdd.setPrefSize(100, 20);
@@ -79,9 +73,7 @@ public class BillView {
     }
 
     private HBox bottomHBox() {
-        HBox hbox = new HBox();
-        hbox.setPadding(new Insets(15, 12, 15, 12));
-        hbox.setSpacing(10);
+        HBox hbox = genHBox();
         hbox.setStyle("-fx-background-color: #336699;");
 
         Button buttonDetails = new Button("View Details");
@@ -139,7 +131,8 @@ public class BillView {
     }
 
     //Search Stage
-    private void initSearchStage(Stage searchStage) {
+    private void initSearchStage() {
+        searchStage = new Stage();
         searchStage.initModality(Modality.WINDOW_MODAL);
         searchStage.initOwner(primaryStage);
 
@@ -160,11 +153,9 @@ public class BillView {
     }
 
     private VBox topSearchBox() {
-        VBox vbox = new VBox();
-        vbox.setPadding(new Insets(15, 12, 15, 12));
-        vbox.setSpacing(10);
+        VBox vbox = genVBox();
+
         vbox.setStyle("-fx-background-color: #336699;");
-        vbox.setAlignment(Pos.BASELINE_CENTER);
 
         searchCombo = new ComboBox();
         searchCombo.setPrefSize(100,25);
@@ -178,11 +169,8 @@ public class BillView {
     }
 
     private HBox bottomSearchBox() {
-        HBox hbox = new HBox();
-        hbox.setPadding(new Insets(15, 12, 15, 12));
-        hbox.setSpacing(10);
+        HBox hbox = genHBox();
         hbox.setStyle("-fx-background-color: #336699;");
-        hbox.setAlignment(Pos.BASELINE_CENTER);
 
         Button submit = new Button("Search");
         submit.setPrefSize(100, 20);
@@ -193,10 +181,7 @@ public class BillView {
     }
 
     private VBox leftSearchBox() {
-        VBox vbox = new VBox();
-        vbox.setPadding(new Insets(15, 12, 15, 12));
-        vbox.setSpacing(10);
-        vbox.setAlignment(Pos.BASELINE_CENTER);
+        VBox vbox = genVBox();
 
         DatePicker date = new DatePicker();
         date.setPrefSize(100, 20);
@@ -233,10 +218,7 @@ public class BillView {
     }
 
     private VBox rightSearchBox() {
-        VBox vbox = new VBox();
-        vbox.setPadding(new Insets(15, 12, 15, 12));
-        vbox.setSpacing(10);
-        vbox.setAlignment(Pos.BASELINE_CENTER);
+        VBox vbox = genVBox();
         vbox.setStyle("-fx-background-color: lightgray;");
 
         TextField min = new TextField();
@@ -281,20 +263,260 @@ public class BillView {
         return vbox;
     }
 
-    //Helper methods
-    private void toggleDatePickers(DatePicker date, DatePicker date2) {
-        date.setDisable(date.isDisabled()?false:true);
-        date2.setDisable(date2.isDisabled()?false:true);
+    //New Entry Stage
+    private void initNewStage() {
+        newStage = new Stage();
+        newStage.initModality(Modality.WINDOW_MODAL);
+        newStage.initOwner(primaryStage);
+
+        topNewBox = topNewBox();
+        centerNewBox = centerNewBox();
+        HBox bottomNewBox = bottomNewBox();
+
+        BorderPane border = new BorderPane();
+        border.setTop(topNewBox);
+        border.setCenter(centerNewBox);
+        border.setBottom(bottomNewBox);
+
+        newStage.setScene(new Scene(border));
+        newStage.setTitle("New Entry");
+        newStage.setResizable(false);
     }
 
-    private void toggleAmountFields(TextField field, TextField field2) {
-        field.setDisable(field.isDisabled()?false:true);
-        field2.setDisable(field2.isDisabled()?false:true);
+    private VBox topNewBox() {
+        VBox vbox = genVBox();
+        vbox.setStyle("-fx-background-color: #336699;");
+
+        newCombo = new ComboBox();
+        newCombo.setPrefSize(200, 20);
+
+        Button newBill = new Button("New");
+        newBill.setPrefSize(100, 20);
+        newBill.setOnAction(event -> createBill());
+
+        Button viewBill = new Button("View/Edit");
+        viewBill.setPrefSize(100, 20);
+        viewBill.setOnAction(event -> editBill());
+
+        HBox hbox = new HBox();
+        hbox.getChildren().addAll(newBill, viewBill);
+
+        newBillchk = new CheckBox("Include Inactive");
+        newBillchk.setTextFill(Color.WHITE);
+        newBillchk.setOnAction(event -> popNewCombo(newBillchk.isSelected()?true:false));
+
+        vbox.getChildren().addAll(newCombo, hbox, newBillchk);
+        return vbox;
     }
 
+    private VBox centerNewBox() {
+        VBox vbox = genVBox();
+
+        DatePicker date = new DatePicker();
+        date.setPrefSize(100, 20);
+        date.setValue(LocalDate.now());
+
+        TextField amount = new TextField();
+        amount.setPromptText("Amount");
+        amount.setPrefSize(100, 20);
+
+        TextField notes = new TextField();
+        notes.setPromptText("Notes");
+        notes.setPrefSize(200, 20);
+
+        vbox.getChildren().addAll(date, amount, notes);
+        return vbox;
+    }
+
+
+    private HBox bottomNewBox() {
+        HBox hbox = genHBox();
+
+        Button submit = new Button("Submit");
+        submit.setPrefSize(100, 20);
+        submit.setOnAction(event -> submitEntry());
+
+        hbox.getChildren().addAll(submit);
+        return hbox;
+    }
+
+    //Edit Bill Stage
+    private void editBill() {
+        String currentBill = "";
+        try {
+            currentBill = ((ComboBox) topNewBox.getChildren().get(0)).getSelectionModel().getSelectedItem().toString();
+        }catch (NullPointerException e) { }
+        if (currentBill.equals("")) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Cannot View Bill");
+            alert.setContentText("Oops, no bill is selected! Please select or create one");
+            alert.showAndWait();
+            return;
+        }
+        editStage = new Stage();
+        editStage.initModality(Modality.WINDOW_MODAL);
+        editStage.initOwner(newStage);
+
+        HBox topEditBill = topEditBill();
+        centerEditBill = centerEditBill();
+        bottomEditBill = bottomEditBill();
+
+
+        BorderPane border = new BorderPane();
+        border.setTop(topEditBill);
+        border.setCenter(centerEditBill);
+        border.setBottom(bottomEditBill);
+
+        editStage.setScene(new Scene(border));
+        editStage.setTitle("View/Edit Bill");
+        editStage.setResizable(false);
+
+        editStage.showAndWait();
+    }
+
+    HBox topEditBill() {
+        HBox hbox = genHBox();
+
+        CheckBox chk = new CheckBox("Edit");
+        chk.setTextFill(Color.WHITE);
+        chk.setOnAction(event -> toggleBillEdit(chk.isSelected()));
+
+        hbox.getChildren().addAll(chk);
+        return hbox;
+    }
+
+    VBox centerEditBill() {
+        VBox vbox = genVBox();
+
+        String selectedName = ((ComboBox) topNewBox.getChildren().get(0)).getSelectionModel().getSelectedItem().toString();
+        Bill currentBill = getBillByName(selectedName);
+
+        TextField input = new TextField();
+        input.setPrefSize(100, 20);
+        input.setText(currentBill.getName());
+        input.setDisable(true);
+
+        CheckBox chk = new CheckBox("Active");
+        chk.setPrefSize(100, 20);
+        chk.setSelected(currentBill.isActive());
+        chk.setDisable(true);
+
+        vbox.getChildren().addAll(input,chk);
+        return vbox;
+
+    }
+
+    HBox bottomEditBill() {
+        HBox hbox = genHBox();
+
+        Button save = new Button("Save");
+        save.setPrefSize(100, 20);
+        save.setOnAction(event -> saveBill());
+        save.setDisable(true);
+
+        Button del = new Button("Delete");
+        del.setPrefSize(100, 20);
+        del.setOnAction(event -> delBill());
+        del.setTextFill(Color.RED);
+        del.setDisable(true);
+
+        hbox.getChildren().addAll(save,del);
+        return hbox;
+    }
+
+    //Edit Stage Helper Methods
+    private void saveBill() {
+        String newName = ((TextField) centerEditBill.getChildren().get(0)).getText().strip();
+        String oldName = ((ComboBox) topNewBox.getChildren().get(0)).getSelectionModel().getSelectedItem().toString();
+        boolean setActive = ((CheckBox) centerEditBill.getChildren().get(1)).isSelected();
+        boolean oldActive = getBillByName(oldName).isActive();
+        if (verifyName(newName)){
+            try {
+                Connection conn = Launcher.getConnection();
+                PreparedStatement statement = conn.prepareStatement("update bill set name=?, status=? where name=?");
+                statement.setString(1, newName);
+                statement.setBoolean(2, setActive);
+                statement.setString(3, oldName);
+                statement.executeUpdate();
+                loadBills();
+                editStage.close();
+                popNewCombo(newBillchk.isSelected());
+                newCombo.getSelectionModel().select(newName);
+            }catch (Exception e) { e.printStackTrace(); }
+        }else if (oldActive != setActive && newName.equalsIgnoreCase(oldName)) {
+            try {
+                Connection conn = Launcher.getConnection();
+                PreparedStatement statement = conn.prepareStatement("update bill set status=? where name=?");
+                statement.setBoolean(1, setActive);
+                statement.setString(2, oldName);
+                statement.executeUpdate();
+                loadBills();
+                editStage.close();
+                popNewCombo(newBillchk.isSelected());
+                newCombo.getSelectionModel().select(oldName);
+            }catch (Exception e) { e.printStackTrace(); }
+        }
+        else {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Cannot Modify Bill");
+            alert.setContentText("Oops, that bill already exists! (or is invalid)");
+            alert.showAndWait();
+        }
+    }
+
+    private void delBill() {
+        String newName = ((TextField) centerEditBill.getChildren().get(0)).getText().strip();
+        String oldName = ((ComboBox) topNewBox.getChildren().get(0)).getSelectionModel().getSelectedItem().toString();
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Bill");
+        alert.setHeaderText("Warning! Please read before continuing.");
+        alert.setContentText("This will delete ALL ENTRIES for this bill. Are you sure?");
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == ButtonType.OK) {
+            if (!newName.equalsIgnoreCase(oldName)) {
+                alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("Security Error: Something doesn't add up (name match violation)");
+                alert.setContentText("Please try deleting this entry again.");
+                alert.showAndWait();
+                editStage.close();
+                return;
+            }
+            try {
+                Connection conn = Launcher.getConnection();
+                PreparedStatement statement = conn.prepareStatement("delete from bill where name=?");
+                statement.setString(1, oldName);
+                statement.executeUpdate();
+                loadBills();
+                editStage.close();
+                newCombo.getSelectionModel().clearSelection();
+                popNewCombo(newBillchk.isSelected());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void toggleBillEdit(boolean edit) {
+        centerEditBill.getChildren().get(0).setDisable(!edit);
+        centerEditBill.getChildren().get(1).setDisable(!edit);
+        bottomEditBill.getChildren().get(0).setDisable(!edit);
+        bottomEditBill.getChildren().get(1).setDisable(!edit);
+    }
+
+    private Bill getBillByName(String name) {
+        for (Bill bill : bills) {
+            if (bill.getName().equals(name)) return bill;
+        }
+        return null;
+    }
+
+    //Search Stage helper methods
     private void search() {
-        searchStage = new Stage();
-        initSearchStage(searchStage);
+        initSearchStage();
         popSearchCombo(false);
         searchStage.showAndWait();
     }
@@ -372,6 +594,134 @@ public class BillView {
         searchCombo.getSelectionModel().selectFirst();
     }
 
+    private void toggleDatePickers(DatePicker date, DatePicker date2) {
+        date.setDisable(date.isDisabled()?false:true);
+        date2.setDisable(date2.isDisabled()?false:true);
+    }
+
+    private void toggleAmountFields(TextField field, TextField field2) {
+        field.setDisable(field.isDisabled()?false:true);
+        field2.setDisable(field2.isDisabled()?false:true);
+    }
+
+    //New Entry Stage helper methods
+    private void newEntry() {
+        initNewStage();
+        popNewCombo(false);
+        newStage.showAndWait();
+    }
+
+    private void popNewCombo(boolean all) {
+        ObservableList<String> items = FXCollections.observableArrayList();
+        for (Bill bill : bills) {
+            if (bill.getName().equals("All Bills")) continue;
+            if (bill.isActive() || all) items.add(bill.getName());
+        }
+        newCombo.setItems(items);
+    }
+
+    //More
+    private void submitEntry() {
+        String name = "";
+        try {
+            name = ((ComboBox) topNewBox.getChildren().get(0)).getSelectionModel().getSelectedItem().toString();
+        }catch (Exception e) { }
+        float amount = -1f;
+        try {
+            amount = Float.parseFloat( ((TextField) centerNewBox.getChildren().get(1)).getText());
+        }catch (NumberFormatException e) { }
+
+        if (name.equals("")) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Cannot Add Entry");
+            alert.setContentText("Oops, no bill is selected! Please select or create one");
+            alert.showAndWait();
+            return;
+        }else if (amount < 0) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Cannot Add Entry");
+            alert.setContentText("Invalid amount");
+            alert.showAndWait();
+            return;
+        }
+        LocalDate date = ((DatePicker) centerNewBox.getChildren().get(0)).getValue();
+        String notes = ((TextField) centerNewBox.getChildren().get(2)).getText();
+        try {
+            Connection conn = Launcher.getConnection();
+            PreparedStatement statement = conn.prepareStatement("INSERT INTO entry(name, date, amount, status, services) values(?,?,?,?,?)");
+            statement.setString(1, name);
+            statement.setDate(2, Date.valueOf(date));
+            statement.setFloat(3, amount);
+            statement.setInt(4, 0);
+            statement.setString(5, notes);
+            statement.executeUpdate();
+            newStage.close();
+            entryPop("select * from entry join bill on bill.name=entry.name where entry.name=\'"+name+"\'");
+            popTView();
+        }catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private void createBill() {
+        TextInputDialog input = new TextInputDialog();
+        input.setTitle("Create Bill");
+        input.setHeaderText("Enter a bill name:");
+        input.setContentText("Bill:");
+        Optional<String> result = input.showAndWait();
+        if (result.isPresent()) {
+            String bill = result.get().strip();
+            if (verifyName(bill)) {
+                try {
+                    Connection conn = Launcher.getConnection();
+                    PreparedStatement statement = conn.prepareStatement("INSERT INTO bill(name, status) values(?,?)");
+                    statement.setString(1, bill);
+                    statement.setBoolean(2, true);
+                    statement.executeUpdate();
+                    loadBills();
+                    popNewCombo(newBillchk.isSelected());
+                    newCombo.getSelectionModel().select(bill);
+                }catch (Exception e) { e.printStackTrace(); }
+            }
+            else {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("Cannot Create Bill");
+                alert.setContentText("Oops, that bill already exists! (or is invalid)");
+                alert.showAndWait();
+            }
+        }
+    }
+
+    private boolean verifyName(String newBill) {
+        newBill = newBill.toLowerCase();
+        if (newBill.equals("") || newBill.equals("all bills")) return false;
+        String oldBill;
+        for (Bill bill : bills) {
+            oldBill = bill.getName().toLowerCase();
+            if (oldBill.equals("all bills")) continue;
+            if (oldBill.equals(newBill)) return false;
+        }
+        return true;
+    }
+
+    private VBox genVBox() {
+        VBox vbox = new VBox();
+        vbox.setPadding(new Insets(15, 12, 15, 12));
+        vbox.setSpacing(10);
+        vbox.setAlignment(Pos.BASELINE_CENTER);
+        return vbox;
+    }
+
+    private HBox genHBox() {
+        HBox hbox = new HBox();
+        hbox.setPadding(new Insets(15, 12, 15, 12));
+        hbox.setSpacing(10);
+        hbox.setAlignment(Pos.BASELINE_CENTER);
+        hbox.setStyle("-fx-background-color: #336699;");
+        return hbox;
+    }
+
     protected void loadBills() {
         try {
             bills = new ArrayList<>();
@@ -413,15 +763,13 @@ public class BillView {
         try {
             Entry entry = (Entry) tview.getSelectionModel().getSelectedItem();
             System.out.println("Entry details "+entry.id);
+            viewStage = new Stage();
         }catch (NullPointerException e) { }
-    }
-
-    private void newEntry() {
-        System.out.println("New entry");
     }
 
     private void stats() {
         System.out.println("Stats");
+        statStage = new Stage();
     }
 
     private void pageLeft() {
