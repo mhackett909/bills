@@ -1,10 +1,12 @@
 Entry.java
+ Bill
  Entry
  Entry$Payment
 BillConverter.java
  BillConverter
  BillConverter$Bill
  BillConverter$Entry
+BillView.java
+ BillView
 Launcher.java
- Bill
  Launcher
