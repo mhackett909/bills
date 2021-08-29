@@ -32,7 +32,7 @@ public class Launcher extends Application {
 
     //Controller methods
     protected void renameBill(String oldName, String newName, boolean setActive) throws SQLException {
-        Connection conn = Launcher.getConnection();
+        Connection conn = getConnection();
         PreparedStatement statement = conn.prepareStatement("update bill set name=?, status=? where name=?");
         statement.setString(1, newName);
         statement.setBoolean(2, setActive);
@@ -41,7 +41,7 @@ public class Launcher extends Application {
     }
 
     protected void updateBillStatus(String name, boolean setActive) throws SQLException {
-        Connection conn = Launcher.getConnection();
+        Connection conn = getConnection();
         PreparedStatement statement = conn.prepareStatement("update bill set status=? where name=?");
         statement.setBoolean(1, setActive);
         statement.setString(2, name);
@@ -74,7 +74,7 @@ public class Launcher extends Application {
     }
 
     protected void insertNewEntry(String name, LocalDate date, float amount, String notes) throws SQLException {
-        Connection conn = Launcher.getConnection();
+        Connection conn = getConnection();
         PreparedStatement statement = conn.prepareStatement("INSERT INTO entry(name, date, amount, status, services) values(?,?,?,?,?)");
         statement.setString(1, name);
         statement.setDate(2, Date.valueOf(date));
@@ -85,7 +85,7 @@ public class Launcher extends Application {
     }
 
     protected void insertNewBill(String bill) throws SQLException {
-        Connection conn = Launcher.getConnection();
+        Connection conn = getConnection();
         PreparedStatement statement = conn.prepareStatement("INSERT INTO bill(name, status) values(?,?)");
         statement.setString(1, bill);
         statement.setBoolean(2, true);
@@ -133,6 +133,28 @@ public class Launcher extends Application {
                 billData.addEntry(id, name, date, amount, status, notes);
             }
             billView.popTView(billData.getEntries());
+        }catch (SQLException t) { t.printStackTrace(); }
+    }
+
+    protected void paymentPop(int id) {
+        try {
+            billData.initPayments();
+            String statement = "select * from entry join payment on entry.id=payment.entryID where entry.id=?";
+            Connection conn = getConnection();
+            PreparedStatement ps = conn.prepareStatement(statement);
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+               int paymentID = rs.getInt(7);
+               int entryID = rs.getInt(8);
+               Date date = rs.getDate(9);
+               float amount = rs.getFloat(10);
+               String type = rs.getString(11);
+               String medium = rs.getString(12);
+               String notes = rs.getString(13);
+               billData.addPayment(paymentID, entryID, date, amount, type, medium, notes);
+            }
+            billView.popPView(billData.getPayments());
         }catch (SQLException t) { t.printStackTrace(); }
     }
 

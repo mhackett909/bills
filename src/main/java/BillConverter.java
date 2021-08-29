@@ -137,13 +137,14 @@ public class BillConverter {
                         ResultSet rs = statement3.executeQuery();
                         rs.next();
                         int id = rs.getInt(1);
-                        statement4 = conn.prepareStatement("INSERT INTO payment(entryID, date, amount, type, notes) " +
-                                "values(?, ?, ?, ?, ?)");
+                        statement4 = conn.prepareStatement("INSERT INTO payment(entryID, date, amount, type, medium, notes) " +
+                                "values(?, ?, ?, ?, ?, ?)");
                         statement4.setInt(1, id);
                         statement4.setDate(2, sqlDate);
                         statement4.setDouble(3, amount);
-                        statement4.setString(4, entry.paid);
-                        statement4.setString(5, entry.notes);
+                        statement4.setString(4, (entry.paid.equals("Auto")?"":entry.paid));
+                        statement4.setString(5, (entry.paid.equals("Auto")?entry.paid:""));
+                        statement4.setString(6, entry.notes);
                         //System.out.println(statement4.toString());
                         statement4.executeUpdate();
                     }

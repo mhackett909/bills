@@ -4,7 +4,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
@@ -22,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 public class BillView {
-    private TableView tview;
+    private TableView tview, pview;
     private Stage primaryStage, searchStage, newStage, editStage;
     private Stage viewStage, paymentStage, statStage;
     private VBox topSearchBox, leftSearchBox, rightSearchBox;
@@ -42,6 +41,7 @@ public class BillView {
         this.primaryStage = primaryStage;
         HBox hbox = topHBox(), hbox2 = bottomHBox();
         tview = tView();
+        pview = pView();
 
         BorderPane border = new BorderPane();
         border.setTop(hbox);
@@ -109,26 +109,26 @@ public class BillView {
 
     private TableView tView() {
         TableView tView = new TableView();
-        TableColumn<BillData.Entry, Integer> column1 = new TableColumn<>("ID");
-        column1.setCellValueFactory(new PropertyValueFactory<>("id"));
-        column1.setVisible(false);
+        TableColumn<BillData.Entry, Integer> column0 = new TableColumn<>("ID");
+        column0.setCellValueFactory(new PropertyValueFactory<>("id"));
+        column0.setVisible(false);
 
-        TableColumn<BillData.Entry, String> column2 = new TableColumn<>("Name");
-        column2.setCellValueFactory(new PropertyValueFactory<>("name"));
+        TableColumn<BillData.Entry, String> column1 = new TableColumn<>("Name");
+        column1.setCellValueFactory(new PropertyValueFactory<>("name"));
 
-        TableColumn<BillData.Entry, Date> column3 = new TableColumn<>("Date");
-        column3.setCellValueFactory(new PropertyValueFactory<>("date"));
+        TableColumn<BillData.Entry, Date> column2 = new TableColumn<>("Date");
+        column2.setCellValueFactory(new PropertyValueFactory<>("date"));
 
-        TableColumn<BillData.Entry, Float> column4 = new TableColumn<>("Amount");
-        column4.setCellValueFactory(new PropertyValueFactory<>("amount"));
+        TableColumn<BillData.Entry, Float> column3 = new TableColumn<>("Amount");
+        column3.setCellValueFactory(new PropertyValueFactory<>("amount"));
 
-        TableColumn<BillView, ImageView> column5 = new TableColumn<>("Status");
-        column5.setCellValueFactory(new PropertyValueFactory<>("image"));
+        TableColumn<BillView, ImageView> column4 = new TableColumn<>("Status");
+        column4.setCellValueFactory(new PropertyValueFactory<>("image"));
 
-        TableColumn<BillData.Entry, String> column6 = new TableColumn<>("Notes");
-        column6.setCellValueFactory(new PropertyValueFactory<>("notes"));
+        TableColumn<BillData.Entry, String> column5 = new TableColumn<>("Notes");
+        column5.setCellValueFactory(new PropertyValueFactory<>("notes"));
 
-        tView.getColumns().addAll(column1, column2, column3, column4, column5, column6);
+        tView.getColumns().addAll(column0, column1, column2, column3, column4, column5);
         return tView;
     }
 
@@ -426,6 +426,68 @@ public class BillView {
         return hbox;
     }
 
+    //View Stage
+    private void viewEntry() {
+        TablePosition pos;
+        try {
+            pos = (TablePosition) tview.getSelectionModel().getSelectedCells().get(0);
+        }catch (Exception e) {
+            System.out.println("Please select an entry");
+            return;
+        }
+        int row = pos.getRow();
+        TableColumn column = (TableColumn) tview.getColumns().get(0);
+        int id = Integer.parseInt(column.getCellObservableValue(row).getValue().toString());
+        initViewStage();
+        controller.paymentPop(id);
+        viewStage.showAndWait();
+    }
+
+    private void initViewStage() {
+        viewStage = new Stage();
+        viewStage.initModality(Modality.WINDOW_MODAL);
+        viewStage.initOwner(primaryStage);
+
+        BorderPane border = new BorderPane();
+        border.setTop(genHBox());
+        border.setCenter(genVBox());
+        border.setBottom(pview);
+
+        viewStage.setScene(new Scene(border));
+        viewStage.setTitle("Entry Details");
+        viewStage.setResizable(false);
+    }
+
+    private TableView pView() {
+        TableView pView = new TableView();
+
+        TableColumn<BillData.Payment, Integer> column0 = new TableColumn<>("ID");
+        column0.setCellValueFactory(new PropertyValueFactory<>("id"));
+        column0.setVisible(false);
+
+        TableColumn<BillData.Payment, Integer> column1 = new TableColumn<>("ID");
+        column1.setCellValueFactory(new PropertyValueFactory<>("id"));
+        column1.setVisible(false);
+
+        TableColumn<BillData.Payment, Date> column2 = new TableColumn<>("Date");
+        column2.setCellValueFactory(new PropertyValueFactory<>("date"));
+
+        TableColumn<BillData.Payment, Float> column3 = new TableColumn<>("Amount");
+        column3.setCellValueFactory(new PropertyValueFactory<>("amount"));
+
+        TableColumn<BillData.Payment, String> column4 = new TableColumn<>("Type");
+        column4.setCellValueFactory(new PropertyValueFactory<>("type"));
+
+        TableColumn<BillData.Payment, String> column5 = new TableColumn<>("Medium");
+        column5.setCellValueFactory(new PropertyValueFactory<>("medium"));
+
+        TableColumn<BillData.Payment, String> column6 = new TableColumn<>("Notes");
+        column6.setCellValueFactory(new PropertyValueFactory<>("notes"));
+
+        pView.getColumns().addAll(column0, column1, column2, column3, column4, column5, column6);
+        return pView;
+    }
+
     //Edit Stage Helper Methods
     private void saveBill() {
         String newName = ((TextField) centerEditBill.getChildren().get(0)).getText().strip();
@@ -679,16 +741,9 @@ public class BillView {
         tview.setItems(entries);
     }
 
-    private void viewEntry() {
-        try {
-            tview.getSelectionModel().getSelectedItem();
-        }catch (NullPointerException e) {
-            System.out.println("Please select an entry");
-            return;
-        }
-        System.out.println("Entry details");
-        //Use column 0 to get ID, then request payment info from controller
-        viewStage = new Stage();
+    protected void popPView(ObservableList entries) {
+        pview.refresh();
+        pview.setItems(entries);
     }
 
     private void stats() {

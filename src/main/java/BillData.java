@@ -2,29 +2,44 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-
 import java.sql.Date;
 import java.util.ArrayList;
 
 public class BillData {
-    private ObservableList<Entry> entries;
     private ArrayList<Bill> bills;
+    private ObservableList<Entry> entries;
+    private ObservableList<Payment> payments;
     public BillData() {
         initBills();
         initEntries();
+        initPayments();
     }
     public ArrayList<Bill> getBills() { return bills; }
     public ObservableList<Entry> getEntries() { return entries; }
+    public ObservableList<Payment> getPayments() { return payments; }
     public void initBills() { bills = new ArrayList<>(); }
     public void initEntries() { entries = FXCollections.observableArrayList(); }
+    public void initPayments() { payments = FXCollections.observableArrayList(); }
     public void addBill(String name, boolean status) {
         bills.add(new Bill(name, status));
     }
     public void addEntry(int id, String name, Date date, float amount, int status, String notes) {
         entries.add(new Entry(id, name, date, amount, status, notes));
     }
+    public void addPayment(int id, int entryID, Date date, float amount, String type, String medium, String notes) {
+        payments.add(new Payment(id, entryID, date, amount, type, medium, notes));
+    }
+    public class Bill {
+        private String name;
+        private boolean isActive;
+        public Bill(String name, boolean isActive) {
+            this.name = name;
+            this.isActive = isActive;
+        }
+        public String getName() { return name; }
+        public boolean isActive() { return isActive; }
+    }
     public class Entry {
-        ArrayList<Payment> payments;
         int id;
         String name;
         Date date;
@@ -32,8 +47,6 @@ public class BillData {
         int status;
         String notes;
         private ImageView image;
-
-
         Entry(int id, String name, Date date, float amount,
               int status, String n) {
             this.id = id;
@@ -43,10 +56,6 @@ public class BillData {
             this.status = status;
             notes = n;
             setImage(status);
-        }
-        public void addPayment(Payment payment) {
-            //Check for duplicate?
-            payments.add(payment);
         }
         public int getId() { return id; }
         public String getName() { return name; }
@@ -69,32 +78,30 @@ public class BillData {
             }
             image = new ImageView(img);
         }
-
-        private class Payment {
-            int id;
-            int entryID;
-            Date date;
-            float amount;
-            String type;
-            String notes;
-            Payment(int id, int eID, Date date, float a, String t, String n) {
-                this.id = id;
-                entryID = eID;
-                this.date = date;
-                amount = a;
-                type = t;
-                notes = n;
-            }
-        }
     }
-    public class Bill {
-        private String name;
-        private boolean isActive;
-        public Bill(String name, boolean isActive) {
-            this.name = name;
-            this.isActive = isActive;
+    public class Payment {
+        int id;
+        int entryID;
+        Date date;
+        float amount;
+        String type;
+        String medium;
+        String notes;
+        Payment(int id, int eID, Date date, float a, String t, String m, String n) {
+            this.id = id;
+            entryID = eID;
+            this.date = date;
+            amount = a;
+            type = t;
+            medium = m;
+            notes = n;
         }
-        public String getName() { return name; }
-        public boolean isActive() { return isActive; }
+        public int getId() { return id; }
+        public int getEntryID() { return entryID; }
+        public Date getDate() { return date; }
+        public float getAmount() { return amount; }
+        public String getType() { return type; }
+        public String getMedium() { return medium; }
+        public String getNotes() { return notes; }
     }
 }

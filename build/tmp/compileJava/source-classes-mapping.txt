@@ -2,12 +2,12 @@ BillConverter.java
  BillConverter
  BillConverter$Bill
  BillConverter$Entry
-BillView.java
- BillView
 BillData.java
  BillData
  BillData$Bill
  BillData$Entry
- BillData$Entry$Payment
+ BillData$Payment
+BillView.java
+ BillView
 Launcher.java
  Launcher
