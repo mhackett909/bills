@@ -4,6 +4,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.BorderPane;
@@ -30,9 +32,11 @@ public class BillView {
     private CheckBox newBillchk;
     private Launcher controller;
 
+
     public BillView(Launcher controller) {
         this.controller = controller;
     }
+
     //Primary Stage
     protected void initPrimaryStage(Stage primaryStage) {
         this.primaryStage = primaryStage;
@@ -118,8 +122,8 @@ public class BillView {
         TableColumn<BillData.Entry, Float> column4 = new TableColumn<>("Amount");
         column4.setCellValueFactory(new PropertyValueFactory<>("amount"));
 
-        TableColumn<BillData.Entry, Integer> column5 = new TableColumn<>("Status");
-        column5.setCellValueFactory(new PropertyValueFactory<>("status"));
+        TableColumn<BillView, ImageView> column5 = new TableColumn<>("Status");
+        column5.setCellValueFactory(new PropertyValueFactory<>("image"));
 
         TableColumn<BillData.Entry, String> column6 = new TableColumn<>("Notes");
         column6.setCellValueFactory(new PropertyValueFactory<>("notes"));
@@ -347,8 +351,8 @@ public class BillView {
         if (currentBill.equals("")) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
-            alert.setHeaderText("Cannot View Bill");
-            alert.setContentText("Oops, no bill is selected! Please select or create one");
+            alert.setHeaderText("No Bill Selected");
+            alert.setContentText("Please select or create one");
             alert.showAndWait();
             return;
         }
@@ -448,8 +452,8 @@ public class BillView {
         else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
-            alert.setHeaderText("Cannot Modify Bill");
-            alert.setContentText("Oops, that bill already exists! (or is invalid)");
+            alert.setHeaderText("Cannot Modify: Bill already exists");
+            alert.setContentText("It may also be an in invalid name");
             alert.showAndWait();
         }
     }
@@ -460,15 +464,15 @@ public class BillView {
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Delete Bill");
-        alert.setHeaderText("Warning! Please read before continuing.");
-        alert.setContentText("This will delete ALL ENTRIES for this bill. Are you sure?");
+        alert.setHeaderText("Warning! This will DELETE ALL ENTRIES.");
+        alert.setContentText("Are you really sure?");
         Optional<ButtonType> result = alert.showAndWait();
         if (result.get() == ButtonType.OK) {
             if (!newName.equalsIgnoreCase(oldName)) {
                 alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");
-                alert.setHeaderText("Security Error: Something doesn't add up (name match violation)");
-                alert.setContentText("Please try deleting this entry again.");
+                alert.setHeaderText("Security Error: Name Match Violation)");
+                alert.setContentText("Something doesn't add up. Please try deleting this entry again.");
                 alert.showAndWait();
                 editStage.close();
                 return;
@@ -605,15 +609,15 @@ public class BillView {
         if (name.equals("")) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
-            alert.setHeaderText("Cannot Add Entry");
-            alert.setContentText("Oops, no bill is selected! Please select or create one");
+            alert.setHeaderText("No Bill Selected");
+            alert.setContentText("Please select or create one");
             alert.showAndWait();
             return;
         }else if (amount < 0) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
-            alert.setHeaderText("Cannot Add Entry");
-            alert.setContentText("Invalid amount");
+            alert.setHeaderText("Invalid Amount");
+            alert.setContentText("Remember no dollar sign needed");
             alert.showAndWait();
             return;
         }
@@ -646,8 +650,8 @@ public class BillView {
             else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");
-                alert.setHeaderText("Cannot Create Bill");
-                alert.setContentText("Oops, that bill already exists! (or is invalid)");
+                alert.setHeaderText("Cannot create: Bill already exists");
+                alert.setContentText("Its name may also be invalid. Perhaps include inactive?");
                 alert.showAndWait();
             }
         }

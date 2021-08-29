@@ -1,5 +1,7 @@
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 import java.sql.Date;
 import java.util.ArrayList;
@@ -29,6 +31,9 @@ public class BillData {
         float amount;
         int status;
         String notes;
+        private ImageView image;
+
+
         Entry(int id, String name, Date date, float amount,
               int status, String n) {
             this.id = id;
@@ -37,6 +42,7 @@ public class BillData {
             this.amount = amount;
             this.status = status;
             notes = n;
+            setImage(status);
         }
         public void addPayment(Payment payment) {
             //Check for duplicate?
@@ -48,7 +54,21 @@ public class BillData {
         public float getAmount() { return amount; }
         public int getStatus() { return status; }
         public String getNotes() { return notes; }
-
+        public ImageView getImage() { return image; }
+        public void setImage(int status) {
+            Image img;
+            switch (status) {
+                case 0:
+                    img = new Image("x-mark-16.jpg");
+                    break;
+                case 1:
+                    img = new Image("checkmark-16.jpg");
+                    break;
+                default:
+                    img = new Image("warning-16.jpg");
+            }
+            image = new ImageView(img);
+        }
 
         private class Payment {
             int id;
