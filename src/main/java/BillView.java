@@ -1,4 +1,3 @@
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -15,12 +14,9 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.sql.Date;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Optional;
 
 public class BillView {
@@ -32,9 +28,11 @@ public class BillView {
     private HBox bottomEditBill;
     private ComboBox searchCombo, newCombo;
     private CheckBox newBillchk;
-    private ObservableList<Entry> entries;
-    private ArrayList<Bill> bills;
+    private Launcher controller;
 
+    public BillView(Launcher controller) {
+        this.controller = controller;
+    }
     //Primary Stage
     protected void initPrimaryStage(Stage primaryStage) {
         this.primaryStage = primaryStage;
@@ -107,23 +105,23 @@ public class BillView {
 
     private TableView tView() {
         TableView tView = new TableView();
-        TableColumn<Entry, Integer> column1 = new TableColumn<>("ID");
+        TableColumn<BillData.Entry, Integer> column1 = new TableColumn<>("ID");
         column1.setCellValueFactory(new PropertyValueFactory<>("id"));
         column1.setVisible(false);
 
-        TableColumn<Entry, String> column2 = new TableColumn<>("Name");
+        TableColumn<BillData.Entry, String> column2 = new TableColumn<>("Name");
         column2.setCellValueFactory(new PropertyValueFactory<>("name"));
 
-        TableColumn<Entry, Date> column3 = new TableColumn<>("Date");
+        TableColumn<BillData.Entry, Date> column3 = new TableColumn<>("Date");
         column3.setCellValueFactory(new PropertyValueFactory<>("date"));
 
-        TableColumn<Entry, Float> column4 = new TableColumn<>("Amount");
+        TableColumn<BillData.Entry, Float> column4 = new TableColumn<>("Amount");
         column4.setCellValueFactory(new PropertyValueFactory<>("amount"));
 
-        TableColumn<Entry, Integer> column5 = new TableColumn<>("Status");
+        TableColumn<BillData.Entry, Integer> column5 = new TableColumn<>("Status");
         column5.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        TableColumn<Entry, String> column6 = new TableColumn<>("Notes");
+        TableColumn<BillData.Entry, String> column6 = new TableColumn<>("Notes");
         column6.setCellValueFactory(new PropertyValueFactory<>("notes"));
 
         tView.getColumns().addAll(column1, column2, column3, column4, column5, column6);
@@ -162,7 +160,7 @@ public class BillView {
 
         CheckBox chk = new CheckBox("Include Inactive");
         chk.setTextFill(Color.WHITE);
-        chk.setOnAction(event -> popSearchCombo(chk.isSelected()?true:false));
+        chk.setOnAction(event -> controller.popSearchCombo(chk.isSelected()));
 
         vbox.getChildren().addAll(searchCombo, chk);
         return vbox;
@@ -303,7 +301,7 @@ public class BillView {
 
         newBillchk = new CheckBox("Include Inactive");
         newBillchk.setTextFill(Color.WHITE);
-        newBillchk.setOnAction(event -> popNewCombo(newBillchk.isSelected()?true:false));
+        newBillchk.setOnAction(event -> controller.popNewCombo(newBillchk.isSelected()));
 
         vbox.getChildren().addAll(newCombo, hbox, newBillchk);
         return vbox;
@@ -362,7 +360,6 @@ public class BillView {
         centerEditBill = centerEditBill();
         bottomEditBill = bottomEditBill();
 
-
         BorderPane border = new BorderPane();
         border.setTop(topEditBill);
         border.setCenter(centerEditBill);
@@ -390,7 +387,7 @@ public class BillView {
         VBox vbox = genVBox();
 
         String selectedName = ((ComboBox) topNewBox.getChildren().get(0)).getSelectionModel().getSelectedItem().toString();
-        Bill currentBill = getBillByName(selectedName);
+        BillData.Bill currentBill = controller.getBillByName(selectedName);
 
         TextField input = new TextField();
         input.setPrefSize(100, 20);
@@ -430,30 +427,21 @@ public class BillView {
         String newName = ((TextField) centerEditBill.getChildren().get(0)).getText().strip();
         String oldName = ((ComboBox) topNewBox.getChildren().get(0)).getSelectionModel().getSelectedItem().toString();
         boolean setActive = ((CheckBox) centerEditBill.getChildren().get(1)).isSelected();
-        boolean oldActive = getBillByName(oldName).isActive();
-        if (verifyName(newName)){
+        boolean oldActive = controller.getBillByName(oldName).isActive();
+        if (controller.verifyName(newName)){
             try {
-                Connection conn = Launcher.getConnection();
-                PreparedStatement statement = conn.prepareStatement("update bill set name=?, status=? where name=?");
-                statement.setString(1, newName);
-                statement.setBoolean(2, setActive);
-                statement.setString(3, oldName);
-                statement.executeUpdate();
-                loadBills();
+                controller.renameBill(oldName, newName, setActive);
+                controller.loadBills();
                 editStage.close();
-                popNewCombo(newBillchk.isSelected());
+                controller.popNewCombo(newBillchk.isSelected());
                 newCombo.getSelectionModel().select(newName);
             }catch (Exception e) { e.printStackTrace(); }
         }else if (oldActive != setActive && newName.equalsIgnoreCase(oldName)) {
             try {
-                Connection conn = Launcher.getConnection();
-                PreparedStatement statement = conn.prepareStatement("update bill set status=? where name=?");
-                statement.setBoolean(1, setActive);
-                statement.setString(2, oldName);
-                statement.executeUpdate();
-                loadBills();
+                controller.updateBillStatus(oldName, setActive);
+                controller.loadBills();
                 editStage.close();
-                popNewCombo(newBillchk.isSelected());
+                controller.popNewCombo(newBillchk.isSelected());
                 newCombo.getSelectionModel().select(oldName);
             }catch (Exception e) { e.printStackTrace(); }
         }
@@ -490,10 +478,10 @@ public class BillView {
                 PreparedStatement statement = conn.prepareStatement("delete from bill where name=?");
                 statement.setString(1, oldName);
                 statement.executeUpdate();
-                loadBills();
+                controller.loadBills();
                 editStage.close();
                 newCombo.getSelectionModel().clearSelection();
-                popNewCombo(newBillchk.isSelected());
+                controller.popNewCombo(newBillchk.isSelected());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -507,17 +495,10 @@ public class BillView {
         bottomEditBill.getChildren().get(1).setDisable(!edit);
     }
 
-    private Bill getBillByName(String name) {
-        for (Bill bill : bills) {
-            if (bill.getName().equals(name)) return bill;
-        }
-        return null;
-    }
-
     //Search Stage helper methods
     private void search() {
         initSearchStage();
-        popSearchCombo(false);
+        controller.popSearchCombo(false);
         searchStage.showAndWait();
     }
 
@@ -581,15 +562,10 @@ public class BillView {
         }
         statement.append(" order by date desc");
         searchStage.close();
-        entryPop(statement.toString());
-        popTView();
+        controller.entryPop(statement.toString());
     }
 
-    private void popSearchCombo(boolean all) {
-        ObservableList<String> items = FXCollections.observableArrayList();
-        for (Bill bill : bills) {
-            if (bill.isActive() || all) items.add(bill.getName());
-        }
+    protected void popSearchCombo(ObservableList<String> items) {
         searchCombo.setItems(items);
         searchCombo.getSelectionModel().selectFirst();
     }
@@ -607,16 +583,11 @@ public class BillView {
     //New Entry Stage helper methods
     private void newEntry() {
         initNewStage();
-        popNewCombo(false);
+        controller.popNewCombo(false);
         newStage.showAndWait();
     }
 
-    private void popNewCombo(boolean all) {
-        ObservableList<String> items = FXCollections.observableArrayList();
-        for (Bill bill : bills) {
-            if (bill.getName().equals("All Bills")) continue;
-            if (bill.isActive() || all) items.add(bill.getName());
-        }
+    protected void popNewCombo(ObservableList<String> items) {
         newCombo.setItems(items);
     }
 
@@ -649,17 +620,10 @@ public class BillView {
         LocalDate date = ((DatePicker) centerNewBox.getChildren().get(0)).getValue();
         String notes = ((TextField) centerNewBox.getChildren().get(2)).getText();
         try {
-            Connection conn = Launcher.getConnection();
-            PreparedStatement statement = conn.prepareStatement("INSERT INTO entry(name, date, amount, status, services) values(?,?,?,?,?)");
-            statement.setString(1, name);
-            statement.setDate(2, Date.valueOf(date));
-            statement.setFloat(3, amount);
-            statement.setInt(4, 0);
-            statement.setString(5, notes);
-            statement.executeUpdate();
+            controller.insertNewEntry(name, date, amount, notes);
             newStage.close();
-            entryPop("select * from entry join bill on bill.name=entry.name where entry.name=\'"+name+"\'");
-            popTView();
+            controller.entryPop("select * from entry join bill on bill.name=entry.name where entry.name=\'"+name+"\' " +
+                    "order by date desc");
         }catch (Exception e) { e.printStackTrace(); }
     }
 
@@ -671,15 +635,11 @@ public class BillView {
         Optional<String> result = input.showAndWait();
         if (result.isPresent()) {
             String bill = result.get().strip();
-            if (verifyName(bill)) {
+            if (controller.verifyName(bill)) {
                 try {
-                    Connection conn = Launcher.getConnection();
-                    PreparedStatement statement = conn.prepareStatement("INSERT INTO bill(name, status) values(?,?)");
-                    statement.setString(1, bill);
-                    statement.setBoolean(2, true);
-                    statement.executeUpdate();
-                    loadBills();
-                    popNewCombo(newBillchk.isSelected());
+                    controller.insertNewBill(bill);
+                    controller.loadBills();
+                    controller.popNewCombo(newBillchk.isSelected());
                     newCombo.getSelectionModel().select(bill);
                 }catch (Exception e) { e.printStackTrace(); }
             }
@@ -691,18 +651,6 @@ public class BillView {
                 alert.showAndWait();
             }
         }
-    }
-
-    private boolean verifyName(String newBill) {
-        newBill = newBill.toLowerCase();
-        if (newBill.equals("") || newBill.equals("all bills")) return false;
-        String oldBill;
-        for (Bill bill : bills) {
-            oldBill = bill.getName().toLowerCase();
-            if (oldBill.equals("all bills")) continue;
-            if (oldBill.equals(newBill)) return false;
-        }
-        return true;
     }
 
     private VBox genVBox() {
@@ -722,49 +670,21 @@ public class BillView {
         return hbox;
     }
 
-    protected void loadBills() {
-        try {
-            bills = new ArrayList<>();
-            Connection conn = Launcher.getConnection();
-            PreparedStatement ps = conn.prepareStatement("select * from bill");
-            ResultSet rs = ps.executeQuery();
-            bills.add(new Bill("All Bills", true));
-            while(rs.next()) {
-                bills.add(new Bill(rs.getString(1), rs.getBoolean(2)));
-            }
-        }catch (SQLException t) { t.printStackTrace(); }
-    }
-
-    protected void entryPop(String statement) {
-        try {
-            entries = FXCollections.observableArrayList();
-            Connection conn = Launcher.getConnection();
-            PreparedStatement ps = conn.prepareStatement(statement);
-            //System.out.println("Exec: "+statement);
-            ResultSet rs = ps.executeQuery();
-            while(rs.next()) {
-                int id = rs.getInt(1);
-                String name = rs.getString(2);
-                Date date = rs.getDate(3);
-                float amount = rs.getFloat(4);
-                int status = rs.getInt(5);
-                String notes = rs.getString(6);
-                entries.add(new Entry(id, name, date, amount, status, notes));
-            }
-        }catch (SQLException t) { t.printStackTrace(); }
-    }
-
-    protected void popTView() {
+    protected void popTView(ObservableList entries) {
         tview.refresh();
         tview.setItems(entries);
     }
 
     private void viewEntry() {
         try {
-            Entry entry = (Entry) tview.getSelectionModel().getSelectedItem();
-            System.out.println("Entry details "+entry.id);
-            viewStage = new Stage();
-        }catch (NullPointerException e) { }
+            tview.getSelectionModel().getSelectedItem();
+        }catch (NullPointerException e) {
+            System.out.println("Please select an entry");
+            return;
+        }
+        System.out.println("Entry details");
+        //Use column 0 to get ID, then request payment info from controller
+        viewStage = new Stage();
     }
 
     private void stats() {
