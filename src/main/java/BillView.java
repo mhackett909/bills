@@ -5,11 +5,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -21,16 +17,19 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 public class BillView {
-    private TableView tview, pview;
     private Stage primaryStage, searchStage, newStage, editStage;
     private Stage viewStage, paymentStage, statStage;
-    private VBox topSearchBox, leftSearchBox, rightSearchBox;
-    private VBox topNewBox, centerNewBox, centerEditBill;
+    private VBox topSearchBox, leftSearchBox, rightSearchBox; //search window
+    private VBox topNewBox, centerNewBox; //new entry window
+    private VBox centerEditBill; //bill edit window
     private HBox bottomEditBill;
-    private ComboBox searchCombo, newCombo;
-    private CheckBox newBillchk;
-    private Launcher controller;
+    private VBox leftvbox, midvbox, rightvbox; //payment window
 
+    //Controls
+    private TableView tview, pview;
+    private ComboBox searchCombo, newCombo;
+    private CheckBox newBillchk, searchchk;
+    private Launcher controller;
 
     public BillView(Launcher controller) {
         this.controller = controller;
@@ -162,11 +161,11 @@ public class BillView {
         searchCombo = new ComboBox();
         searchCombo.setPrefSize(100,25);
 
-        CheckBox chk = new CheckBox("Include Inactive");
-        chk.setTextFill(Color.WHITE);
-        chk.setOnAction(event -> controller.popSearchCombo(chk.isSelected()));
+        searchchk = new CheckBox("Include Inactive");
+        searchchk.setTextFill(Color.WHITE);
+        searchchk.setOnAction(event -> controller.popSearchCombo(searchchk.isSelected()));
 
-        vbox.getChildren().addAll(searchCombo, chk);
+        vbox.getChildren().addAll(searchCombo, searchchk);
         return vbox;
     }
 
@@ -432,7 +431,7 @@ public class BillView {
         try {
             pos = (TablePosition) tview.getSelectionModel().getSelectedCells().get(0);
         }catch (Exception e) {
-            System.out.println("Please select an entry");
+            System.out.println("Please select an entry"); //TODO alert
             return;
         }
         int row = pos.getRow();
@@ -448,18 +447,39 @@ public class BillView {
         viewStage.initModality(Modality.WINDOW_MODAL);
         viewStage.initOwner(primaryStage);
 
+        //Spacers
+        Pane spacer = new Pane();
+        spacer.setMinSize(20,1);
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Pane spacer2 = new Pane();
+        spacer2.setMinSize(20,1);
+        HBox.setHgrow(spacer2, Priority.ALWAYS);
+
+        Pane spacer3 = new Pane();
+        spacer3.setMinSize(1,20);
+        VBox.setVgrow(spacer3, Priority.ALWAYS);
+
+        Pane spacer4 = new Pane();
+        spacer4.setMinSize(1,1);
+        VBox.setVgrow(spacer4, Priority.ALWAYS);
+
         //HBox has 3 VBoxes
-        VBox leftvbox = genVBox();
-        VBox midvbox = genVBox();
-        VBox rightvbox = genVBox();
+        leftvbox = genVBox();
+        midvbox = genVBox();
+        rightvbox = genVBox();
 
         //Left VBox
         Label entryName = new Label("Bill Name");
+        entryName.setTextFill(Color.WHITE);
+        entryName.setAlignment(Pos.CENTER);
+        entryName.setPrefSize(150, 20);
 
         Label entryStatus = new Label("Status");
 
         CheckBox editchk = new CheckBox("Edit");
         editchk.setOnAction(event -> toggleEntryEdit(editchk.isSelected()));
+        editchk.setTextFill(Color.WHITE);
 
         leftvbox.getChildren().addAll(entryName, entryStatus, editchk);
 
@@ -492,7 +512,7 @@ public class BillView {
         rightvbox.getChildren().addAll(del, add);
 
         HBox hbox = genHBox();
-        hbox.getChildren().addAll(leftvbox, midvbox, rightvbox);
+        hbox.getChildren().addAll(leftvbox, spacer, midvbox, spacer2, rightvbox);
 
         //VBox
         Label label = new Label("Due: ");
@@ -504,12 +524,12 @@ public class BillView {
         addP.setPrefSize(100, 20);
         addP.setOnAction(event -> makePayment(true));
 
-        Button delP = new Button("View/Edit");
+        Button delP = new Button("View Payment");
         delP.setPrefSize(100, 20);
         delP.setOnAction(event -> makePayment(false));
 
         VBox vbox = genVBox();
-        vbox.getChildren().addAll(label, addP, delP);
+        vbox.getChildren().addAll(spacer4, label, addP, delP, spacer3);
 
         BorderPane border = new BorderPane();
         border.setTop(hbox);
@@ -549,6 +569,7 @@ public class BillView {
         column6.setCellValueFactory(new PropertyValueFactory<>("notes"));
 
         pView.getColumns().addAll(column0, column1, column2, column3, column4, column5, column6);
+        pView.setPrefHeight(200);
         return pView;
     }
 
@@ -558,24 +579,20 @@ public class BillView {
         String oldName = ((ComboBox) topNewBox.getChildren().get(0)).getSelectionModel().getSelectedItem().toString();
         boolean setActive = ((CheckBox) centerEditBill.getChildren().get(1)).isSelected();
         boolean oldActive = controller.getBillByName(oldName).isActive();
-        if (controller.verifyName(newName)){
+        if (newName.equals(oldName) && setActive==oldActive) {
+            editStage.close();
+            return;
+        }
+        if (controller.verifyName(newName) || newName.equalsIgnoreCase(oldName)){
             try {
                 controller.renameBill(oldName, newName, setActive);
                 controller.loadBills();
                 editStage.close();
                 controller.popNewCombo(newBillchk.isSelected());
                 newCombo.getSelectionModel().select(newName);
+                controller.resubmitLastQuery();
             }catch (Exception e) { e.printStackTrace(); }
-        }else if (oldActive != setActive && newName.equalsIgnoreCase(oldName)) {
-            try {
-                controller.updateBillStatus(oldName, setActive);
-                controller.loadBills();
-                editStage.close();
-                controller.popNewCombo(newBillchk.isSelected());
-                newCombo.getSelectionModel().select(oldName);
-            }catch (Exception e) { e.printStackTrace(); }
-        }
-        else {
+        }else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("Cannot Modify: Bill already exists");
@@ -611,6 +628,7 @@ public class BillView {
                 controller.loadBills();
                 editStage.close();
                 newCombo.getSelectionModel().clearSelection();
+                controller.resubmitLastQuery();
                 controller.popNewCombo(newBillchk.isSelected());
             } catch (Exception e) {
                 e.printStackTrace();
@@ -638,8 +656,23 @@ public class BillView {
         System.out.println("save entry");
     }
 
+    protected void setEntry(String name, boolean status) {
+        Tooltip tooltip = new Tooltip(name);
+        tooltip.setStyle("-fx-font: normal bold 16 Tahoma;");
+
+        Label entryLabel = (Label) leftvbox.getChildren().get(0);
+        entryLabel.setText(name);
+        entryLabel.setTooltip(tooltip);
+        Label statusLabel = (Label) leftvbox.getChildren().get(1);
+        statusLabel.setText(status?"Active":"Inactive");
+        statusLabel.setTextFill(status?Color.LAWNGREEN:Color.RED);
+    }
+
     private void toggleEntryEdit(boolean edit) {
-        System.out.println("toggling "+edit);
+        for (int x = 0; x < midvbox.getChildren().size(); x++)
+            midvbox.getChildren().get(x).setDisable(!edit);
+        for (int x = 0; x < rightvbox.getChildren().size(); x++)
+            rightvbox.getChildren().get(x).setDisable(!edit);
     }
 
     //Search Stage helper methods
@@ -651,8 +684,11 @@ public class BillView {
 
     private void searchEntry() {
         String bill = ((ComboBox) topSearchBox.getChildren().get(0)).getSelectionModel().getSelectedItem().toString();
+        boolean showInactive = ((CheckBox) topSearchBox.getChildren().get(1)).isSelected();
         StringBuilder statement = new StringBuilder();
         statement.append("select * from entry join bill on bill.name=entry.name where");
+
+        if (!showInactive) statement.append(" bill.status=1 and");
 
         HBox hbox = (HBox) rightSearchBox.getChildren().get(0);
         boolean getPaid = ((CheckBox) hbox.getChildren().get(0)).isSelected();
@@ -707,6 +743,7 @@ public class BillView {
             statement.append(Date.valueOf(date2));
             statement.append("\'");
         }
+
         statement.append(" order by date desc");
         searchStage.close();
         controller.entryPop(statement.toString());

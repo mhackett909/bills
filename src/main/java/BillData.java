@@ -38,14 +38,16 @@ public class BillData {
         }
         public String getName() { return name; }
         public boolean isActive() { return isActive; }
+        public void setName(String name) { this.name=name; }
+        public void setActive(boolean isActive) { this.isActive=isActive; }
     }
     public class Entry {
-        int id;
-        String name;
-        Date date;
-        float amount;
-        int status;
-        String notes;
+        private int id;
+        private String name;
+        private Date date;
+        private float amount;
+        private int status;
+        private String notes;
         private ImageView image;
         Entry(int id, String name, Date date, float amount,
               int status, String n) {
@@ -78,15 +80,16 @@ public class BillData {
             }
             image = new ImageView(img);
         }
+        public void setName(String name) { this.name = name; }
     }
     public class Payment {
-        int id;
-        int entryID;
-        Date date;
-        float amount;
-        String type;
-        String medium;
-        String notes;
+        private int id;
+        private int entryID;
+        private Date date;
+        private float amount;
+        private String type;
+        private String medium;
+        private String notes;
         Payment(int id, int eID, Date date, float a, String t, String m, String n) {
             this.id = id;
             entryID = eID;

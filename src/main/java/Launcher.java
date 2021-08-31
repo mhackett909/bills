@@ -8,6 +8,7 @@ import java.time.LocalDate;
 public class Launcher extends Application {
     private BillView billView;
     private BillData billData;
+    private String lastQuery;
 
     @Override
     public void start(Stage primaryStage) {
@@ -18,6 +19,7 @@ public class Launcher extends Application {
         entryPop("select * from entry " +
                 "join bill on bill.name=entry.name " +
                 "where date >= DATE_SUB(NOW(), INTERVAL 90 DAY) " +
+                "and bill.status=1 " +
                 "order by date desc");
         primaryStage.show();
         primaryStage.setAlwaysOnTop(true);
@@ -38,20 +40,31 @@ public class Launcher extends Application {
         statement.setBoolean(2, setActive);
         statement.setString(3, oldName);
         statement.executeUpdate();
-    }
-
-    protected void updateBillStatus(String name, boolean setActive) throws SQLException {
-        Connection conn = getConnection();
-        PreparedStatement statement = conn.prepareStatement("update bill set status=? where name=?");
-        statement.setBoolean(1, setActive);
-        statement.setString(2, name);
-        statement.executeUpdate();
-
+        for (BillData.Bill bill : billData.getBills()) {
+            if (bill.getName().equalsIgnoreCase(oldName)) {
+                bill.setName(newName);
+                bill.setActive(setActive);
+                break;
+            }
+        }
+        for (BillData.Entry entry : billData.getEntries()) {
+            if (entry.getName().equalsIgnoreCase(oldName)) {
+                entry.setName(newName);
+                break;
+            }
+        }
     }
 
     protected BillData.Bill getBillByName(String name) {
         for (BillData.Bill bill : billData.getBills()) {
             if (bill.getName().equals(name)) return bill;
+        }
+        return null;
+    }
+
+    protected BillData.Entry getEntryByID(int id) {
+        for (BillData.Entry entry : billData.getEntries()) {
+            if (entry.getId() == id) return entry;
         }
         return null;
     }
@@ -121,7 +134,8 @@ public class Launcher extends Application {
             billData.initEntries();
             Connection conn = getConnection();
             PreparedStatement ps = conn.prepareStatement(statement);
-            //System.out.println("Exec: "+statement);
+            System.out.println("Exec: "+statement);
+            lastQuery = statement;
             ResultSet rs = ps.executeQuery();
             while(rs.next()) {
                 int id = rs.getInt(1);
@@ -154,8 +168,16 @@ public class Launcher extends Application {
                String notes = rs.getString(13);
                billData.addPayment(paymentID, entryID, date, amount, type, medium, notes);
             }
+            BillData.Entry entry = getEntryByID(id);
+            BillData.Bill bill = getBillByName(entry.getName());
+            billView.setEntry(bill.getName(), bill.isActive());
             billView.popPView(billData.getPayments());
         }catch (SQLException t) { t.printStackTrace(); }
+    }
+
+    protected void resubmitLastQuery() {
+        //System.out.println("exec: "+lastQuery);
+        entryPop(lastQuery);
     }
 
     //Database connection
