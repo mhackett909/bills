@@ -134,7 +134,7 @@ public class Launcher extends Application {
             billData.initEntries();
             Connection conn = getConnection();
             PreparedStatement ps = conn.prepareStatement(statement);
-            System.out.println("Exec: "+statement);
+            //System.out.println("Exec: "+statement);
             lastQuery = statement;
             ResultSet rs = ps.executeQuery();
             while(rs.next()) {
@@ -170,7 +170,7 @@ public class Launcher extends Application {
             }
             BillData.Entry entry = getEntryByID(id);
             BillData.Bill bill = getBillByName(entry.getName());
-            billView.setEntry(bill.getName(), bill.isActive());
+            billView.setEntry(bill.getName(), bill.isActive(), id, entry.getDate(), entry.getAmount(), entry.getNotes());
             billView.popPView(billData.getPayments());
         }catch (SQLException t) { t.printStackTrace(); }
     }

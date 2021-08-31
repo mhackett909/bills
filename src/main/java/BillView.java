@@ -13,6 +13,7 @@ import java.sql.Date;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -475,13 +476,15 @@ public class BillView {
         entryName.setAlignment(Pos.CENTER);
         entryName.setPrefSize(150, 20);
 
+        Label invoiceNum = new Label("Invoice #");
+
         Label entryStatus = new Label("Status");
 
         CheckBox editchk = new CheckBox("Edit");
         editchk.setOnAction(event -> toggleEntryEdit(editchk.isSelected()));
         editchk.setTextFill(Color.WHITE);
 
-        leftvbox.getChildren().addAll(entryName, entryStatus, editchk);
+        leftvbox.getChildren().addAll(entryName, invoiceNum, entryStatus, editchk);
 
         //Middle VBox
         DatePicker date = new DatePicker();
@@ -656,16 +659,27 @@ public class BillView {
         System.out.println("save entry");
     }
 
-    protected void setEntry(String name, boolean status) {
+    protected void setEntry(String name, boolean status, int e_ID, Date date, float amount, String notes) {
         Tooltip tooltip = new Tooltip(name);
         tooltip.setStyle("-fx-font: normal bold 16 Tahoma;");
 
         Label entryLabel = (Label) leftvbox.getChildren().get(0);
         entryLabel.setText(name);
         entryLabel.setTooltip(tooltip);
-        Label statusLabel = (Label) leftvbox.getChildren().get(1);
-        statusLabel.setText(status?"Active":"Inactive");
-        statusLabel.setTextFill(status?Color.LAWNGREEN:Color.RED);
+
+        Label idLabel = (Label) leftvbox.getChildren().get(1);
+        idLabel.setTextFill(Color.WHITE);
+        idLabel.setText("Invoice #"+e_ID);
+
+        Label statusLabel = (Label) leftvbox.getChildren().get(2);
+        statusLabel.setText(status ? "Active" : "Inactive");
+        statusLabel.setTextFill(status ? Color.LAWNGREEN : Color.ORANGE);
+        statusLabel.setStyle("-fx-font-weight: bold;");
+
+        ((DatePicker) midvbox.getChildren().get(0)).setValue(date.toLocalDate());
+        ((TextField) midvbox.getChildren().get(1)).setText(Float.toString(amount));
+        ((TextField) midvbox.getChildren().get(2)).setText(notes);
+
     }
 
     private void toggleEntryEdit(boolean edit) {
