@@ -33,13 +33,15 @@ public class Launcher extends Application {
     }
 
     //Controller methods
-    protected void renameBill(String oldName, String newName, boolean setActive) throws SQLException {
-        Connection conn = getConnection();
-        PreparedStatement statement = conn.prepareStatement("update bill set name=?, status=? where name=?");
-        statement.setString(1, newName);
-        statement.setBoolean(2, setActive);
-        statement.setString(3, oldName);
-        statement.executeUpdate();
+    protected void renameBill(String oldName, String newName, boolean setActive) {
+        try {
+            Connection conn = getConnection();
+            PreparedStatement statement = conn.prepareStatement("update bill set name=?, status=? where name=?");
+            statement.setString(1, newName);
+            statement.setBoolean(2, setActive);
+            statement.setString(3, oldName);
+            statement.executeUpdate();
+        }catch (SQLException t) { t.printStackTrace();  }
         for (BillData.Bill bill : billData.getBills()) {
             if (bill.getName().equalsIgnoreCase(oldName)) {
                 bill.setName(newName);
@@ -86,23 +88,27 @@ public class Launcher extends Application {
         billView.popNewCombo(items);
     }
 
-    protected void insertNewEntry(String name, LocalDate date, float amount, String notes) throws SQLException {
-        Connection conn = getConnection();
-        PreparedStatement statement = conn.prepareStatement("INSERT INTO entry(name, date, amount, status, services) values(?,?,?,?,?)");
-        statement.setString(1, name);
-        statement.setDate(2, Date.valueOf(date));
-        statement.setFloat(3, amount);
-        statement.setInt(4, 0);
-        statement.setString(5, notes);
-        statement.executeUpdate();
+    protected void insertNewEntry(String name, LocalDate date, float amount, String notes) {
+        try {
+            Connection conn = getConnection();
+            PreparedStatement statement = conn.prepareStatement("INSERT INTO entry(name, date, amount, status, services) values(?,?,?,?,?)");
+            statement.setString(1, name);
+            statement.setDate(2, Date.valueOf(date));
+            statement.setFloat(3, amount);
+            statement.setInt(4, 0);
+            statement.setString(5, notes);
+            statement.executeUpdate();
+        } catch (SQLException t) { t.printStackTrace();  }
     }
 
-    protected void insertNewBill(String bill) throws SQLException {
-        Connection conn = getConnection();
-        PreparedStatement statement = conn.prepareStatement("INSERT INTO bill(name, status) values(?,?)");
-        statement.setString(1, bill);
-        statement.setBoolean(2, true);
-        statement.executeUpdate();
+    protected void insertNewBill(String bill) {
+        try {
+            Connection conn = getConnection();
+            PreparedStatement statement = conn.prepareStatement("INSERT INTO bill(name, status) values(?,?)");
+            statement.setString(1, bill);
+            statement.setBoolean(2, true);
+            statement.executeUpdate();
+        }catch (SQLException t) { t.printStackTrace();  }
     }
     protected boolean verifyName(String newBill) {
         newBill = newBill.toLowerCase();
@@ -175,9 +181,40 @@ public class Launcher extends Application {
         }catch (SQLException t) { t.printStackTrace(); }
     }
 
+    protected void saveEntry(int id, LocalDate date, float amount, String notes) {
+        try {
+            Connection conn = getConnection();
+            PreparedStatement statement = conn.prepareStatement("update entry set date=?, amount=?, services=? where id=?");
+            statement.setDate(1, Date.valueOf(date));
+            statement.setFloat(2, amount);
+            statement.setString(3, notes);
+            statement.setInt(4, id);
+            statement.executeUpdate();
+
+        }catch(SQLException t) { t.printStackTrace(); }
+    }
+
     protected void resubmitLastQuery() {
         //System.out.println("exec: "+lastQuery);
         entryPop(lastQuery);
+    }
+
+    protected void delBill(String name) {
+        try {
+            Connection conn = getConnection();
+            PreparedStatement statement = conn.prepareStatement("delete from bill where name=?");
+            statement.setString(1, name);
+            statement.executeUpdate();
+        }catch (SQLException t) { t.printStackTrace(); }
+    }
+
+    protected void delEntry(int id) {
+        try {
+            Connection conn = getConnection();
+            PreparedStatement ps = conn.prepareStatement("delete from entry where entry.id=?");
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        }catch (SQLException t) { t.printStackTrace(); }
     }
 
     //Database connection

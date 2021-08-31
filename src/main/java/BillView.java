@@ -32,6 +32,8 @@ public class BillView {
     private CheckBox newBillchk, searchchk;
     private Launcher controller;
 
+    private int currentEntryID;
+
     public BillView(Launcher controller) {
         this.controller = controller;
     }
@@ -432,7 +434,11 @@ public class BillView {
         try {
             pos = (TablePosition) tview.getSelectionModel().getSelectedCells().get(0);
         }catch (Exception e) {
-            System.out.println("Please select an entry"); //TODO alert
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("No Entry Selected");
+            alert.setContentText("Please select or create one");
+            alert.showAndWait();
             return;
         }
         int row = pos.getRow();
@@ -587,14 +593,12 @@ public class BillView {
             return;
         }
         if (controller.verifyName(newName) || newName.equalsIgnoreCase(oldName)){
-            try {
-                controller.renameBill(oldName, newName, setActive);
-                controller.loadBills();
-                editStage.close();
-                controller.popNewCombo(newBillchk.isSelected());
-                newCombo.getSelectionModel().select(newName);
-                controller.resubmitLastQuery();
-            }catch (Exception e) { e.printStackTrace(); }
+            controller.renameBill(oldName, newName, setActive);
+            controller.loadBills();
+            editStage.close();
+            controller.popNewCombo(newBillchk.isSelected());
+            newCombo.getSelectionModel().select(newName);
+            controller.resubmitLastQuery();
         }else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
@@ -623,19 +627,12 @@ public class BillView {
                 editStage.close();
                 return;
             }
-            try {
-                Connection conn = Launcher.getConnection();
-                PreparedStatement statement = conn.prepareStatement("delete from bill where name=?");
-                statement.setString(1, oldName);
-                statement.executeUpdate();
-                controller.loadBills();
-                editStage.close();
-                newCombo.getSelectionModel().clearSelection();
-                controller.resubmitLastQuery();
-                controller.popNewCombo(newBillchk.isSelected());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            controller.delBill(oldName);
+            controller.loadBills();
+            editStage.close();
+            newCombo.getSelectionModel().clearSelection();
+            controller.resubmitLastQuery();
+            controller.popNewCombo(newBillchk.isSelected());
         }
     }
 
@@ -646,17 +643,45 @@ public class BillView {
         bottomEditBill.getChildren().get(1).setDisable(!edit);
     }
 
-    //Payment stage helper methods
+    //View stage helper methods
     private void makePayment(boolean newPayment) {
         System.out.println("New payment? "+newPayment);
     }
 
     private void delEntry() {
-        System.out.println("del entry");
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Entry");
+        alert.setHeaderText("Warning! This entry and its payments will be deleted.");
+        alert.setContentText("Proceed?");
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == ButtonType.OK) {
+            controller.delEntry(currentEntryID);
+            viewStage.close();
+            controller.resubmitLastQuery();
+        }
     }
 
     private void saveEntry() {
         System.out.println("save entry");
+        float amount = -1f;
+        try {
+            amount = Float.parseFloat(((TextField) midvbox.getChildren().get(1)).getText());
+        }catch (NumberFormatException e) { }
+        if (amount < 0) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Invalid Amount");
+            alert.setContentText("Remember no dollar sign needed");
+            alert.showAndWait();
+            return;
+        }
+        LocalDate date = ((DatePicker) midvbox.getChildren().get(0)).getValue();
+        String notes = ((TextField) midvbox.getChildren().get(2)).getText();
+        controller.saveEntry(currentEntryID, date, amount, notes);
+        ((CheckBox) leftvbox.getChildren().get(3)).setSelected(false);
+        toggleEntryEdit(false);
+        controller.resubmitLastQuery();
+
     }
 
     protected void setEntry(String name, boolean status, int e_ID, Date date, float amount, String notes) {
@@ -670,6 +695,7 @@ public class BillView {
         Label idLabel = (Label) leftvbox.getChildren().get(1);
         idLabel.setTextFill(Color.WHITE);
         idLabel.setText("Invoice #"+e_ID);
+        currentEntryID = e_ID;
 
         Label statusLabel = (Label) leftvbox.getChildren().get(2);
         statusLabel.setText(status ? "Active" : "Inactive");
@@ -799,7 +825,6 @@ public class BillView {
         try {
             amount = Float.parseFloat( ((TextField) centerNewBox.getChildren().get(1)).getText());
         }catch (NumberFormatException e) { }
-
         if (name.equals("")) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
@@ -817,12 +842,10 @@ public class BillView {
         }
         LocalDate date = ((DatePicker) centerNewBox.getChildren().get(0)).getValue();
         String notes = ((TextField) centerNewBox.getChildren().get(2)).getText();
-        try {
-            controller.insertNewEntry(name, date, amount, notes);
-            newStage.close();
-            controller.entryPop("select * from entry join bill on bill.name=entry.name where entry.name=\'"+name+"\' " +
+        controller.insertNewEntry(name, date, amount, notes);
+        newStage.close();
+        controller.entryPop("select * from entry join bill on bill.name=entry.name where entry.name=\'"+name+"\' " +
                     "order by date desc");
-        }catch (Exception e) { e.printStackTrace(); }
     }
 
     private void createBill() {
@@ -834,12 +857,10 @@ public class BillView {
         if (result.isPresent()) {
             String bill = result.get().strip();
             if (controller.verifyName(bill)) {
-                try {
-                    controller.insertNewBill(bill);
-                    controller.loadBills();
-                    controller.popNewCombo(newBillchk.isSelected());
-                    newCombo.getSelectionModel().select(bill);
-                }catch (Exception e) { e.printStackTrace(); }
+                controller.insertNewBill(bill);
+                controller.loadBills();
+                controller.popNewCombo(newBillchk.isSelected());
+                newCombo.getSelectionModel().select(bill);
             }
             else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
