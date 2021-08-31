@@ -448,14 +448,78 @@ public class BillView {
         viewStage.initModality(Modality.WINDOW_MODAL);
         viewStage.initOwner(primaryStage);
 
+        //HBox has 3 VBoxes
+        VBox leftvbox = genVBox();
+        VBox midvbox = genVBox();
+        VBox rightvbox = genVBox();
+
+        //Left VBox
+        Label entryName = new Label("Bill Name");
+
+        Label entryStatus = new Label("Status");
+
+        CheckBox editchk = new CheckBox("Edit");
+        editchk.setOnAction(event -> toggleEntryEdit(editchk.isSelected()));
+
+        leftvbox.getChildren().addAll(entryName, entryStatus, editchk);
+
+        //Middle VBox
+        DatePicker date = new DatePicker();
+        date.setDisable(true);
+
+        TextField amount = new TextField();
+        amount.setPromptText("Amount");
+        amount.setDisable(true);
+
+        TextField notes = new TextField();
+        notes.setPromptText("Notes");
+        notes.setDisable(true);
+
+        midvbox.getChildren().addAll(date, amount, notes);
+
+        //Right VBox
+        Button del = new Button("Delete Entry");
+        del.setPrefSize(100, 20);
+        del.setOnAction(event -> delEntry());
+        del.setTextFill(Color.RED);
+        del.setDisable(true);
+
+        Button add = new Button("Save");
+        add.setPrefSize(100, 20);
+        add.setOnAction(event -> saveEntry());
+        add.setDisable(true);
+
+        rightvbox.getChildren().addAll(del, add);
+
+        HBox hbox = genHBox();
+        hbox.getChildren().addAll(leftvbox, midvbox, rightvbox);
+
+        //VBox
+        Label label = new Label("Due: ");
+        label.setPrefSize(100, 20);
+        label.setTextFill(Color.RED);
+        label.setAlignment(Pos.CENTER);
+
+        Button addP = new Button("Make Payment");
+        addP.setPrefSize(100, 20);
+        addP.setOnAction(event -> makePayment(true));
+
+        Button delP = new Button("View/Edit");
+        delP.setPrefSize(100, 20);
+        delP.setOnAction(event -> makePayment(false));
+
+        VBox vbox = genVBox();
+        vbox.getChildren().addAll(label, addP, delP);
+
         BorderPane border = new BorderPane();
-        border.setTop(genHBox());
-        border.setCenter(genVBox());
+        border.setTop(hbox);
+        border.setCenter(vbox);
         border.setBottom(pview);
 
         viewStage.setScene(new Scene(border));
         viewStage.setTitle("Entry Details");
-        viewStage.setResizable(false);
+        viewStage.setMinHeight(300);
+        viewStage.setMinWidth(600);
     }
 
     private TableView pView() {
@@ -559,6 +623,23 @@ public class BillView {
         centerEditBill.getChildren().get(1).setDisable(!edit);
         bottomEditBill.getChildren().get(0).setDisable(!edit);
         bottomEditBill.getChildren().get(1).setDisable(!edit);
+    }
+
+    //Payment stage helper methods
+    private void makePayment(boolean newPayment) {
+        System.out.println("New payment? "+newPayment);
+    }
+
+    private void delEntry() {
+        System.out.println("del entry");
+    }
+
+    private void saveEntry() {
+        System.out.println("save entry");
+    }
+
+    private void toggleEntryEdit(boolean edit) {
+        System.out.println("toggling "+edit);
     }
 
     //Search Stage helper methods
