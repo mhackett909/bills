@@ -21,6 +21,8 @@ public class BillView {
     private VBox topNewBox, centerNewBox; //new entry window
     private VBox centerEditBill; //bill edit window
     private HBox bottomEditBill;
+    private HBox paymentHBox;
+    private VBox paymentVBox;
     private VBox leftvbox, midvbox, rightvbox; //entry view window
     private int currentEntryID, currentPaymentID;
     private boolean newPayment;
@@ -538,10 +540,13 @@ public class BillView {
         pmtchk.setOnAction(event -> togglePaymentEdit(pmtchk.isSelected()));
         pmtchk.setPrefSize(100,20);
 
+        HBox hbox = genHBox();
+        if (!newPayment) hbox.getChildren().add(pmtchk);
+
         Button save = new Button("Save");
         save.setPrefSize(100, 20);
         save.setOnAction(event -> savePayment());
-        save.setDisable(true);
+        if (!newPayment) save.setDisable(true);
 
         Button del = new Button("Delete");
         del.setPrefSize(100, 20);
@@ -549,16 +554,41 @@ public class BillView {
         del.setTextFill(Color.RED);
         del.setDisable(true);
 
-        HBox hbox = genHBox();
-        hbox.getChildren().add(pmtchk);
+        paymentHBox = genHBox();
+        if (newPayment) paymentHBox.getChildren().add(save);
+        else paymentHBox.getChildren().addAll(save, del);
 
-        HBox hbox2 = genHBox();
-        hbox2.getChildren().addAll(save, del);
+        DatePicker date = new DatePicker(LocalDate.now());
+        date.setPrefSize(100,20);
+        if (!newPayment) date.setDisable(true);
+
+        TextField amount = new TextField();
+        amount.setPromptText("Amount");
+        amount.setPrefSize(100,20);
+        if (!newPayment) amount.setDisable(true);
+
+        ComboBox method = new ComboBox();
+        method.setPrefSize(100,20);
+        method.setPromptText("Payment Method");
+        if (!newPayment) method.setDisable(true);
+
+        ComboBox medium = new ComboBox();
+        medium.setPrefSize(100,20);
+        medium.setPromptText("Payment Medium");
+        if (!newPayment) medium.setDisable(true);
+
+        TextField notes = new TextField();
+        notes.setPrefSize(100,20);
+        notes.setPromptText("Notes");
+        if (!newPayment) notes.setDisable(true);
+
+        paymentVBox = genVBox();
+        paymentVBox.getChildren().addAll(date, amount, method, medium, notes);
 
         BorderPane border = new BorderPane();
         border.setTop(hbox);
-        border.setCenter(genVBox());
-        border.setBottom(hbox2);
+        border.setCenter(paymentVBox);
+        border.setBottom(paymentHBox);
 
         paymentStage.setScene(new Scene(border));
         paymentStage.setTitle(newPayment?"Make Payment":"View Payment");
@@ -769,7 +799,10 @@ public class BillView {
     }
 
     private void togglePaymentEdit(boolean edit) {
-
+        paymentHBox.getChildren().get(0).setDisable(!edit);
+        paymentHBox.getChildren().get(1).setDisable(!edit);
+        for (int x = 0; x < paymentVBox.getChildren().size(); x++)
+            paymentVBox.getChildren().get(x).setDisable(!edit);
     }
 
     private void savePayment() {
