@@ -10,10 +10,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.sql.Date;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -24,15 +21,15 @@ public class BillView {
     private VBox topNewBox, centerNewBox; //new entry window
     private VBox centerEditBill; //bill edit window
     private HBox bottomEditBill;
-    private VBox leftvbox, midvbox, rightvbox; //payment window
+    private VBox leftvbox, midvbox, rightvbox; //entry view window
+    private int currentEntryID, currentPaymentID;
+    private boolean newPayment;
 
     //Controls
     private TableView tview, pview;
     private ComboBox searchCombo, newCombo;
     private CheckBox newBillchk, searchchk;
     private Launcher controller;
-
-    private int currentEntryID;
 
     public BillView(Launcher controller) {
         this.controller = controller;
@@ -429,26 +426,6 @@ public class BillView {
     }
 
     //View Stage
-    private void viewEntry() {
-        TablePosition pos;
-        try {
-            pos = (TablePosition) tview.getSelectionModel().getSelectedCells().get(0);
-        }catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText("No Entry Selected");
-            alert.setContentText("Please select or create one");
-            alert.showAndWait();
-            return;
-        }
-        int row = pos.getRow();
-        TableColumn column = (TableColumn) tview.getColumns().get(0);
-        int id = Integer.parseInt(column.getCellObservableValue(row).getValue().toString());
-        initViewStage();
-        controller.paymentPop(id);
-        viewStage.showAndWait();
-    }
-
     private void initViewStage() {
         viewStage = new Stage();
         viewStage.initModality(Modality.WINDOW_MODAL);
@@ -551,6 +528,42 @@ public class BillView {
         viewStage.setMinWidth(600);
     }
 
+    //Payment stage
+    private void initPaymentStage() {
+        paymentStage = new Stage();
+        paymentStage.initModality(Modality.WINDOW_MODAL);
+        paymentStage.initOwner(viewStage);
+
+        CheckBox pmtchk = new CheckBox("Edit");
+        pmtchk.setOnAction(event -> togglePaymentEdit(pmtchk.isSelected()));
+        pmtchk.setPrefSize(100,20);
+
+        Button save = new Button("Save");
+        save.setPrefSize(100, 20);
+        save.setOnAction(event -> savePayment());
+        save.setDisable(true);
+
+        Button del = new Button("Delete");
+        del.setPrefSize(100, 20);
+        del.setOnAction(event -> delPayment());
+        del.setTextFill(Color.RED);
+        del.setDisable(true);
+
+        HBox hbox = genHBox();
+        hbox.getChildren().add(pmtchk);
+
+        HBox hbox2 = genHBox();
+        hbox2.getChildren().addAll(save, del);
+
+        BorderPane border = new BorderPane();
+        border.setTop(hbox);
+        border.setCenter(genVBox());
+        border.setBottom(hbox2);
+
+        paymentStage.setScene(new Scene(border));
+        paymentStage.setTitle(newPayment?"Make Payment":"View Payment");
+    }
+
     private TableView pView() {
         TableView pView = new TableView();
 
@@ -558,8 +571,8 @@ public class BillView {
         column0.setCellValueFactory(new PropertyValueFactory<>("id"));
         column0.setVisible(false);
 
-        TableColumn<BillData.Payment, Integer> column1 = new TableColumn<>("ID");
-        column1.setCellValueFactory(new PropertyValueFactory<>("id"));
+        TableColumn<BillData.Payment, Integer> column1 = new TableColumn<>("EntryID");
+        column1.setCellValueFactory(new PropertyValueFactory<>("entryID"));
         column1.setVisible(false);
 
         TableColumn<BillData.Payment, Date> column2 = new TableColumn<>("Date");
@@ -582,7 +595,7 @@ public class BillView {
         return pView;
     }
 
-    //Edit Stage Helper Methods
+    //Edit Bill Stage Helper Methods
     private void saveBill() {
         String newName = ((TextField) centerEditBill.getChildren().get(0)).getText().strip();
         String oldName = ((ComboBox) topNewBox.getChildren().get(0)).getSelectionModel().getSelectedItem().toString();
@@ -643,9 +656,25 @@ public class BillView {
         bottomEditBill.getChildren().get(1).setDisable(!edit);
     }
 
-    //View stage helper methods
-    private void makePayment(boolean newPayment) {
-        System.out.println("New payment? "+newPayment);
+    //View entry stage helper methods
+    private void viewEntry() {
+        try {
+            TablePosition pos;
+            pos = (TablePosition) tview.getSelectionModel().getSelectedCells().get(0);
+            int row = pos.getRow();
+            TableColumn column = (TableColumn) tview.getColumns().get(0);
+            int id = Integer.parseInt(column.getCellObservableValue(row).getValue().toString());
+            initViewStage();
+            controller.paymentPop(id);
+            viewStage.showAndWait();
+        }catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("No Entry Selected");
+            alert.setContentText("Please select or create one");
+            alert.showAndWait();
+            return;
+        }
     }
 
     private void delEntry() {
@@ -662,7 +691,6 @@ public class BillView {
     }
 
     private void saveEntry() {
-        System.out.println("save entry");
         float amount = -1f;
         try {
             amount = Float.parseFloat(((TextField) midvbox.getChildren().get(1)).getText());
@@ -681,7 +709,6 @@ public class BillView {
         ((CheckBox) leftvbox.getChildren().get(3)).setSelected(false);
         toggleEntryEdit(false);
         controller.resubmitLastQuery();
-
     }
 
     protected void setEntry(String name, boolean status, int e_ID, Date date, float amount, String notes) {
@@ -713,6 +740,44 @@ public class BillView {
             midvbox.getChildren().get(x).setDisable(!edit);
         for (int x = 0; x < rightvbox.getChildren().size(); x++)
             rightvbox.getChildren().get(x).setDisable(!edit);
+    }
+
+    //Payment stage helper methods
+    private void makePayment(boolean newPayment) {
+        this.newPayment = newPayment;
+        if (!newPayment) {
+            try {
+                TablePosition pos;
+                pos = (TablePosition) pview.getSelectionModel().getSelectedCells().get(0);
+                int row = pos.getRow();
+                TableColumn column = (TableColumn) pview.getColumns().get(0);
+                int id = Integer.parseInt(column.getCellObservableValue(row).getValue().toString());
+                System.out.println("view payment " + id + " for entry " + currentEntryID);
+                currentPaymentID = id;
+                //TODO Tell controller to populate payment window
+            } catch (Exception e) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("No Entry Selected");
+                alert.setContentText("Please select or create one");
+                alert.showAndWait();
+                return;
+            }
+        }
+        initPaymentStage();
+        paymentStage.showAndWait();
+    }
+
+    private void togglePaymentEdit(boolean edit) {
+
+    }
+
+    private void savePayment() {
+
+    }
+
+    private void delPayment() {
+
     }
 
     //Search Stage helper methods
@@ -815,7 +880,6 @@ public class BillView {
         newCombo.setItems(items);
     }
 
-    //More
     private void submitEntry() {
         String name = "";
         try {
@@ -823,7 +887,7 @@ public class BillView {
         }catch (Exception e) { }
         float amount = -1f;
         try {
-            amount = Float.parseFloat( ((TextField) centerNewBox.getChildren().get(1)).getText());
+            amount = Float.parseFloat(((TextField) centerNewBox.getChildren().get(1)).getText());
         }catch (NumberFormatException e) { }
         if (name.equals("")) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
