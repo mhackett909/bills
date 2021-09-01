@@ -135,6 +135,28 @@ public class Launcher extends Application {
         }catch (SQLException t) { t.printStackTrace(); }
     }
 
+    protected void loadPaymentMethods() {
+        ObservableList<String> methods = FXCollections.observableArrayList();
+        methods.addAll("ACH (Direct) Debit", "Cash", "Check", "Credit", "Cryptocurrency");
+        methods.addAll("Debit", "Electronic Bank Transfer", "eWallet (Apple Pay, Google Pay...)");
+        methods.addAll("Gift Card", "Prepaid Card", "Service (Zelle, Venmo, PayPal...)", "Other");
+
+        ObservableList<String> mediums = FXCollections.observableArrayList();
+        mediums.addAll("App", "Automatic Payment", "Cash-on-Delivery", "In-person", "Mail");
+        mediums.addAll("Website", "Telephone", "Other");
+
+        billView.popMethodCombo(methods);
+        billView.popMediumCombo(mediums);
+    }
+
+    protected void popPaymentWindow(int currentPaymentID) {
+        Date date = null;
+        float amount = 0;
+        String method, medium, notes;
+        method = medium = notes = "";
+        billView.popPaymentWindow(date, amount, method, medium, notes);
+    }
+
     protected void entryPop(String statement) {
         try {
             billData.initEntries();
@@ -164,6 +186,7 @@ public class Launcher extends Application {
             PreparedStatement ps = conn.prepareStatement(statement);
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
+            float totalPaid = 0, totalDue;
             while (rs.next()) {
                int paymentID = rs.getInt(7);
                int entryID = rs.getInt(8);
@@ -173,11 +196,14 @@ public class Launcher extends Application {
                String medium = rs.getString(12);
                String notes = rs.getString(13);
                billData.addPayment(paymentID, entryID, date, amount, type, medium, notes);
+               totalPaid+=amount;
             }
             BillData.Entry entry = getEntryByID(id);
             BillData.Bill bill = getBillByName(entry.getName());
             billView.setEntry(bill.getName(), bill.isActive(), id, entry.getDate(), entry.getAmount(), entry.getNotes());
             billView.popPView(billData.getPayments());
+            totalDue = entry.getAmount()-totalPaid;
+            billView.setDueLabel(totalDue);
         }catch (SQLException t) { t.printStackTrace(); }
     }
 

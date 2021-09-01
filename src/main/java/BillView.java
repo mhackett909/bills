@@ -29,9 +29,10 @@ public class BillView {
 
     //Controls
     private TableView tview, pview;
-    private ComboBox searchCombo, newCombo;
+    private ComboBox searchCombo, newCombo, methodCombo, mediumCombo;
     private CheckBox newBillchk, searchchk;
     private Launcher controller;
+    private Label dueLabel;
 
     public BillView(Launcher controller) {
         this.controller = controller;
@@ -503,10 +504,11 @@ public class BillView {
         hbox.getChildren().addAll(leftvbox, spacer, midvbox, spacer2, rightvbox);
 
         //VBox
-        Label label = new Label("Due: ");
-        label.setPrefSize(100, 20);
-        label.setTextFill(Color.RED);
-        label.setAlignment(Pos.CENTER);
+        dueLabel = new Label("Due: ");
+        dueLabel.setPrefSize(100, 20);
+        dueLabel.setTextFill(Color.RED);
+        dueLabel.setStyle("-fx-font-weight: bold;");
+        dueLabel.setAlignment(Pos.CENTER);
 
         Button addP = new Button("Make Payment");
         addP.setPrefSize(100, 20);
@@ -517,7 +519,7 @@ public class BillView {
         delP.setOnAction(event -> makePayment(false));
 
         VBox vbox = genVBox();
-        vbox.getChildren().addAll(spacer4, label, addP, delP, spacer3);
+        vbox.getChildren().addAll(spacer4, dueLabel, addP, delP, spacer3);
 
         BorderPane border = new BorderPane();
         border.setTop(hbox);
@@ -538,57 +540,52 @@ public class BillView {
 
         CheckBox pmtchk = new CheckBox("Edit");
         pmtchk.setOnAction(event -> togglePaymentEdit(pmtchk.isSelected()));
-        pmtchk.setPrefSize(100,20);
 
         HBox hbox = genHBox();
         if (!newPayment) hbox.getChildren().add(pmtchk);
 
         Button save = new Button("Save");
-        save.setPrefSize(100, 20);
         save.setOnAction(event -> savePayment());
         if (!newPayment) save.setDisable(true);
 
         Button del = new Button("Delete");
-        del.setPrefSize(100, 20);
         del.setOnAction(event -> delPayment());
         del.setTextFill(Color.RED);
         del.setDisable(true);
 
         paymentHBox = genHBox();
-        if (newPayment) paymentHBox.getChildren().add(save);
+        if (newPayment) paymentHBox.getChildren().addAll(save);
         else paymentHBox.getChildren().addAll(save, del);
 
         DatePicker date = new DatePicker(LocalDate.now());
-        date.setPrefSize(100,20);
         if (!newPayment) date.setDisable(true);
 
         TextField amount = new TextField();
         amount.setPromptText("Amount");
-        amount.setPrefSize(100,20);
         if (!newPayment) amount.setDisable(true);
 
-        ComboBox method = new ComboBox();
-        method.setPrefSize(100,20);
-        method.setPromptText("Payment Method");
-        if (!newPayment) method.setDisable(true);
+        methodCombo = new ComboBox();
+        methodCombo.setPromptText("Payment Method");
+        methodCombo.setPrefWidth(250);
+        if (!newPayment) methodCombo.setDisable(true);
 
-        ComboBox medium = new ComboBox();
-        medium.setPrefSize(100,20);
-        medium.setPromptText("Payment Medium");
-        if (!newPayment) medium.setDisable(true);
+        mediumCombo = new ComboBox();
+        mediumCombo.setPromptText("Payment Medium");
+        mediumCombo.setPrefWidth(250);
+        if (!newPayment) mediumCombo.setDisable(true);
 
         TextField notes = new TextField();
-        notes.setPrefSize(100,20);
         notes.setPromptText("Notes");
         if (!newPayment) notes.setDisable(true);
 
         paymentVBox = genVBox();
-        paymentVBox.getChildren().addAll(date, amount, method, medium, notes);
+        paymentVBox.getChildren().addAll(date, amount, methodCombo, mediumCombo, notes);
 
         BorderPane border = new BorderPane();
         border.setTop(hbox);
         border.setCenter(paymentVBox);
         border.setBottom(paymentHBox);
+        border.setMinWidth(200);
 
         paymentStage.setScene(new Scene(border));
         paymentStage.setTitle(newPayment?"Make Payment":"View Payment");
@@ -762,7 +759,10 @@ public class BillView {
         ((DatePicker) midvbox.getChildren().get(0)).setValue(date.toLocalDate());
         ((TextField) midvbox.getChildren().get(1)).setText(Float.toString(amount));
         ((TextField) midvbox.getChildren().get(2)).setText(notes);
+    }
 
+    protected void setDueLabel(float amountDue) {
+        this.dueLabel.setText("Due: "+Float.toString(amountDue));
     }
 
     private void toggleEntryEdit(boolean edit) {
@@ -782,9 +782,7 @@ public class BillView {
                 int row = pos.getRow();
                 TableColumn column = (TableColumn) pview.getColumns().get(0);
                 int id = Integer.parseInt(column.getCellObservableValue(row).getValue().toString());
-                System.out.println("view payment " + id + " for entry " + currentEntryID);
                 currentPaymentID = id;
-                //TODO Tell controller to populate payment window
             } catch (Exception e) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");
@@ -795,7 +793,14 @@ public class BillView {
             }
         }
         initPaymentStage();
+        controller.loadPaymentMethods();
+        if (!newPayment) controller.popPaymentWindow(currentPaymentID);
+        paymentStage.setResizable(false);
         paymentStage.showAndWait();
+    }
+
+    protected void popPaymentWindow(Date date, float amount, String mthd, String mdum, String notes) {
+
     }
 
     private void togglePaymentEdit(boolean edit) {
@@ -811,6 +816,14 @@ public class BillView {
 
     private void delPayment() {
 
+    }
+
+    protected void popMethodCombo(ObservableList<String> items) {
+        methodCombo.setItems(items);
+    }
+
+    protected void popMediumCombo(ObservableList<String> items) {
+        mediumCombo.setItems(items);
     }
 
     //Search Stage helper methods
