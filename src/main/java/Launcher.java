@@ -71,6 +71,13 @@ public class Launcher extends Application {
         return null;
     }
 
+    protected BillData.Payment getPaymentByID(int id) {
+        for (BillData.Payment payment : billData.getPayments()) {
+            if (payment.getId() == id) return payment;
+        }
+        return null;
+    }
+
     protected void popSearchCombo(boolean all) {
         ObservableList<String> items = FXCollections.observableArrayList();
         for (BillData.Bill bill : billData.getBills()) {
@@ -154,7 +161,84 @@ public class Launcher extends Application {
         float amount = 0;
         String method, medium, notes;
         method = medium = notes = "";
+        for (BillData.Payment payment : billData.getPayments()) {
+            if (payment.getId() == currentPaymentID) {
+                date = payment.getDate();
+                amount = payment.getAmount();
+                method = payment.getMethod();
+                medium = payment.getMedium();
+                notes = payment.getNotes();
+                break;
+            }
+        }
         billView.popPaymentWindow(date, amount, method, medium, notes);
+    }
+
+    protected void delPayment(int paymentID, int entryID, float amountDue) {
+        try {
+            Connection conn = getConnection();
+            PreparedStatement ps = conn.prepareStatement("delete from payment where id=?");
+            ps.setInt(1,paymentID);
+            ps.executeUpdate();
+            BillData.Payment payment = getPaymentByID(paymentID);
+            float deletedAmount = payment.getAmount();
+            amountDue+=deletedAmount;
+            updateEntryStatus(entryID, amountDue);
+
+        }catch (SQLException t) { t.printStackTrace(); }
+    }
+
+    protected void insertPayment(boolean newPayment, int currentEntryID, int currentPaymentID, float amountDue,
+                                 Date date, float amount, String mthd, String mdum, String notes) {
+        try {
+            Connection conn = getConnection();
+            PreparedStatement ps;
+            String statement;
+            if (newPayment) {
+                statement = "insert into payment(entryID, date, amount, type, medium, notes) " +
+                        "values(?,?,?,?,?,?)";
+                ps = conn.prepareStatement(statement);
+                ps.setInt(1, currentEntryID);
+                ps.setDate(2, date);
+                ps.setFloat(3, amount);
+                ps.setString(4, mthd);
+                ps.setString(5, mdum);
+                ps.setString(6, notes);
+            }
+            else {
+                statement = "update payment set date=?, amount=?, type=?, medium=?, notes=? where id=?";
+                ps = conn.prepareStatement(statement);
+                ps.setDate(1, date);
+                ps.setFloat(2, amount);
+                ps.setString(3, mthd);
+                ps.setString(4, mdum);
+                ps.setString(5, notes);
+                ps.setInt(6, currentPaymentID);
+            }
+            ps.executeUpdate();
+            if (newPayment) amountDue-=amount;
+            else {
+                BillData.Payment payment = getPaymentByID(currentPaymentID);
+                float oldAmount = payment.getAmount();
+                float difference = amount - oldAmount;
+                amountDue-=difference;
+            }
+            updateEntryStatus(currentEntryID, amountDue);
+        }catch (SQLException t) { t.printStackTrace(); }
+    }
+
+    protected void updateEntryStatus(int id, float amountDue) {
+        int status;
+        if (amountDue < 0) status = 2;
+        else if (amountDue == 0) status = 1;
+        else status = 0;
+        try {
+            Connection conn = getConnection();
+            PreparedStatement ps = conn.prepareStatement("update entry set status=? where id=?");
+            ps.setInt(1, status);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        }catch (SQLException t) { t.printStackTrace(); }
     }
 
     protected void entryPop(String statement) {
@@ -216,7 +300,6 @@ public class Launcher extends Application {
             statement.setString(3, notes);
             statement.setInt(4, id);
             statement.executeUpdate();
-
         }catch(SQLException t) { t.printStackTrace(); }
     }
 

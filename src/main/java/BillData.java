@@ -81,13 +81,14 @@ public class BillData {
             image = new ImageView(img);
         }
         public void setName(String name) { this.name = name; }
+        public void setAmount(float amount) { this.amount = amount; }
     }
     public class Payment {
         private int id;
         private int entryID;
         private Date date;
         private float amount;
-        private String type;
+        private String method;
         private String medium;
         private String notes;
         Payment(int id, int eID, Date date, float a, String t, String m, String n) {
@@ -95,7 +96,7 @@ public class BillData {
             entryID = eID;
             this.date = date;
             amount = a;
-            type = t;
+            method = t;
             medium = m;
             notes = n;
         }
@@ -103,7 +104,7 @@ public class BillData {
         public int getEntryID() { return entryID; }
         public Date getDate() { return date; }
         public float getAmount() { return amount; }
-        public String getType() { return type; }
+        public String getMethod() { return method; }
         public String getMedium() { return medium; }
         public String getNotes() { return notes; }
     }

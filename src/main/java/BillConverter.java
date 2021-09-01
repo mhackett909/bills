@@ -128,8 +128,8 @@ public class BillConverter {
                     statement2.setDate(2, sqlDate);
                     statement2.setFloat(3, amount);
                     boolean isPaid = !entry.paid.equals("Unpaid");
-                    statement2.setInt(4, (isPaid? 1 : 0));
-                    statement2.setString(5, entry.notes);
+                    statement2.setInt(4, isPaid? 1 : 0);
+                    statement2.setString(5, isPaid?"":entry.notes);
                     //System.out.println(statement2.toString());
                     statement2.executeUpdate();
                     if (isPaid) {
@@ -142,8 +142,8 @@ public class BillConverter {
                         statement4.setInt(1, id);
                         statement4.setDate(2, sqlDate);
                         statement4.setDouble(3, amount);
-                        statement4.setString(4, (entry.paid.equals("Auto")?"":entry.paid));
-                        statement4.setString(5, (entry.paid.equals("Auto")?entry.paid:""));
+                        statement4.setString(4, entry.paid.equals("Auto")?"ACH (Direct) Debit":entry.paid);
+                        statement4.setString(5, entry.paid.equals("Auto")?"Automatic Payment":"Other");
                         statement4.setString(6, entry.notes);
                         //System.out.println(statement4.toString());
                         statement4.executeUpdate();

@@ -26,6 +26,7 @@ public class BillView {
     private VBox leftvbox, midvbox, rightvbox; //entry view window
     private int currentEntryID, currentPaymentID;
     private boolean newPayment;
+    private float amountDue;
 
     //Controls
     private TableView tview, pview;
@@ -608,8 +609,8 @@ public class BillView {
         TableColumn<BillData.Payment, Float> column3 = new TableColumn<>("Amount");
         column3.setCellValueFactory(new PropertyValueFactory<>("amount"));
 
-        TableColumn<BillData.Payment, String> column4 = new TableColumn<>("Type");
-        column4.setCellValueFactory(new PropertyValueFactory<>("type"));
+        TableColumn<BillData.Payment, String> column4 = new TableColumn<>("Method");
+        column4.setCellValueFactory(new PropertyValueFactory<>("method"));
 
         TableColumn<BillData.Payment, String> column5 = new TableColumn<>("Medium");
         column5.setCellValueFactory(new PropertyValueFactory<>("medium"));
@@ -735,7 +736,14 @@ public class BillView {
         controller.saveEntry(currentEntryID, date, amount, notes);
         ((CheckBox) leftvbox.getChildren().get(3)).setSelected(false);
         toggleEntryEdit(false);
+        BillData.Entry entry = controller.getEntryByID(currentEntryID);
+        float oldAmount = entry.getAmount();
+        entry.setAmount(amount);
+        float difference = entry.getAmount() - oldAmount;
+        amountDue+=difference;
+        controller.updateEntryStatus(currentEntryID, amountDue);
         controller.resubmitLastQuery();
+        controller.paymentPop(currentEntryID);
     }
 
     protected void setEntry(String name, boolean status, int e_ID, Date date, float amount, String notes) {
@@ -762,7 +770,8 @@ public class BillView {
     }
 
     protected void setDueLabel(float amountDue) {
-        this.dueLabel.setText("Due: "+Float.toString(amountDue));
+        this.amountDue = amountDue;
+        this.dueLabel.setText("Due: "+amountDue);
     }
 
     private void toggleEntryEdit(boolean edit) {
@@ -791,7 +800,7 @@ public class BillView {
                 alert.showAndWait();
                 return;
             }
-        }
+        }else currentPaymentID = -1;
         initPaymentStage();
         controller.loadPaymentMethods();
         if (!newPayment) controller.popPaymentWindow(currentPaymentID);
@@ -800,7 +809,11 @@ public class BillView {
     }
 
     protected void popPaymentWindow(Date date, float amount, String mthd, String mdum, String notes) {
-
+        ((DatePicker) paymentVBox.getChildren().get(0)).setValue(date.toLocalDate());
+        ((TextField) paymentVBox.getChildren().get(1)).setText(Float.toString(amount));
+        ((ComboBox) paymentVBox.getChildren().get(2)).getSelectionModel().select(mthd);
+        ((ComboBox) paymentVBox.getChildren().get(3)).getSelectionModel().select(mdum);
+        ((TextField) paymentVBox.getChildren().get(4)).setText(notes);
     }
 
     private void togglePaymentEdit(boolean edit) {
@@ -811,11 +824,48 @@ public class BillView {
     }
 
     private void savePayment() {
+        //TODO input validation
 
+        LocalDate chosenDate = ((DatePicker) paymentVBox.getChildren().get(0)).getValue();
+        Date date = Date.valueOf(chosenDate);
+        String chosenAmount = ((TextField) paymentVBox.getChildren().get(1)).getText();
+        float amount = -1f;
+        try {
+            amount = Float.parseFloat(chosenAmount);
+        }catch (NumberFormatException e) { }
+        String mthd = "";
+        String mdum = "";
+        try {
+            mthd = ((ComboBox) paymentVBox.getChildren().get(2)).getSelectionModel().getSelectedItem().toString();
+            mdum = ((ComboBox) paymentVBox.getChildren().get(3)).getSelectionModel().getSelectedItem().toString();
+        }catch (NullPointerException e) { System.out.println("null string selection"); }
+        if (amount < 0 || mthd.equals("") || mdum.equals("")) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText(amount < 0?"Invalid Amount":"Invalid Payment Method or Medium");
+            alert.setContentText(amount < 0?"Remember no dollar sign needed":"Please select a method and a medium");
+            alert.showAndWait();
+            return;
+        }
+        String notes = ((TextField) paymentVBox.getChildren().get(4)).getText();
+        controller.insertPayment(newPayment, currentEntryID, currentPaymentID, amountDue, date, amount, mthd, mdum, notes);
+        paymentStage.close();
+        controller.paymentPop(currentEntryID);
+        controller.resubmitLastQuery();
     }
 
     private void delPayment() {
-
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Payment");
+        alert.setHeaderText("Warning! This payment record will be deleted.");
+        alert.setContentText("Proceed?");
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == ButtonType.OK) {
+            controller.delPayment(currentPaymentID, currentEntryID, amountDue);
+            paymentStage.close();
+            controller.paymentPop(currentEntryID);
+            controller.resubmitLastQuery();
+        }
     }
 
     protected void popMethodCombo(ObservableList<String> items) {
