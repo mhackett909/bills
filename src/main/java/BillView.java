@@ -771,7 +771,7 @@ public class BillView {
 
     protected void setDueLabel(float amountDue) {
         this.amountDue = amountDue;
-        this.dueLabel.setText("Due: "+amountDue);
+        this.dueLabel.setText("Due: "+String.format("%.2f",amountDue));
     }
 
     private void toggleEntryEdit(boolean edit) {
@@ -824,8 +824,6 @@ public class BillView {
     }
 
     private void savePayment() {
-        //TODO input validation
-
         LocalDate chosenDate = ((DatePicker) paymentVBox.getChildren().get(0)).getValue();
         Date date = Date.valueOf(chosenDate);
         String chosenAmount = ((TextField) paymentVBox.getChildren().get(1)).getText();
