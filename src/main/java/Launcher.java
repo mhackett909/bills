@@ -16,11 +16,7 @@ public class Launcher extends Application {
         billData = new BillData();
         billView.initPrimaryStage(primaryStage);
         loadBills();
-        entryPop("select * from entry " +
-                "join bill on bill.name=entry.name " +
-                "where date >= DATE_SUB(NOW(), INTERVAL 90 DAY) " +
-                "and bill.status=1 " +
-                "order by date desc");
+        reset();
         primaryStage.show();
         primaryStage.setAlwaysOnTop(true);
         primaryStage.setAlwaysOnTop(false);
@@ -33,6 +29,13 @@ public class Launcher extends Application {
     }
 
     //Controller methods
+    protected void reset() {
+        entryPop("select * from entry " +
+                "join bill on bill.name=entry.name " +
+                "where date >= DATE_SUB(NOW(), INTERVAL 90 DAY) " +
+                "and bill.status=1 " +
+                "order by date desc");
+    }
     protected void renameBill(String oldName, String newName, boolean setActive) {
         try {
             Connection conn = getConnection();

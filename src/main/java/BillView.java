@@ -61,9 +61,13 @@ public class BillView {
         HBox hbox = genHBox();
         hbox.setStyle("-fx-background-color: #336699;");
 
-        Button buttonAdd = new Button("New Entry");
+        Button buttonAdd = new Button("New Invoice");
         buttonAdd.setPrefSize(100, 20);
         buttonAdd.setOnAction(event -> newEntry());
+
+        Button buttonReset = new Button("Reset");
+        buttonReset.setOnAction(event -> controller.reset());
+        buttonReset.setPrefSize(100, 20);
 
         Button buttonSearch = new Button("Search");
         buttonSearch.setOnAction(event -> search());
@@ -73,7 +77,7 @@ public class BillView {
         spacer.setMinSize(20,1);
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        hbox.getChildren().addAll(buttonAdd, spacer, buttonSearch);
+        hbox.getChildren().addAll(buttonAdd, spacer, buttonReset, buttonSearch);
         return hbox;
     }
 
@@ -81,7 +85,7 @@ public class BillView {
         HBox hbox = genHBox();
         hbox.setStyle("-fx-background-color: #336699;");
 
-        Button buttonDetails = new Button("View Details");
+        Button buttonDetails = new Button("Open Invoice");
         buttonDetails.setPrefSize(100, 20);
         buttonDetails.setOnAction(event -> viewEntry());
 
@@ -448,10 +452,6 @@ public class BillView {
         spacer3.setMinSize(1,20);
         VBox.setVgrow(spacer3, Priority.ALWAYS);
 
-        Pane spacer4 = new Pane();
-        spacer4.setMinSize(1,1);
-        VBox.setVgrow(spacer4, Priority.ALWAYS);
-
         //HBox has 3 VBoxes
         leftvbox = genVBox();
         midvbox = genVBox();
@@ -467,7 +467,7 @@ public class BillView {
 
         Label entryStatus = new Label("Status");
 
-        CheckBox editchk = new CheckBox("Edit");
+        CheckBox editchk = new CheckBox("Edit Invoice");
         editchk.setOnAction(event -> toggleEntryEdit(editchk.isSelected()));
         editchk.setTextFill(Color.WHITE);
 
@@ -488,13 +488,13 @@ public class BillView {
         midvbox.getChildren().addAll(date, amount, notes);
 
         //Right VBox
-        Button del = new Button("Delete Entry");
+        Button del = new Button("Del Invoice");
         del.setPrefSize(100, 20);
         del.setOnAction(event -> delEntry());
         del.setTextFill(Color.RED);
         del.setDisable(true);
 
-        Button add = new Button("Save");
+        Button add = new Button("Save Invoice");
         add.setPrefSize(100, 20);
         add.setOnAction(event -> saveEntry());
         add.setDisable(true);
@@ -505,22 +505,26 @@ public class BillView {
         hbox.getChildren().addAll(leftvbox, spacer, midvbox, spacer2, rightvbox);
 
         //VBox
+        Label payLabel = new Label("Payment Center");
+        payLabel.setPrefSize(200, 25);
+        payLabel.setStyle("-fx-font: normal bold 18 Arial;");
+        payLabel.setAlignment(Pos.CENTER);
+
         dueLabel = new Label("Due: ");
         dueLabel.setPrefSize(100, 20);
-        dueLabel.setTextFill(Color.RED);
-        dueLabel.setStyle("-fx-font-weight: bold;");
+        dueLabel.setStyle("-fx-font: normal bold 14 Arial;");
         dueLabel.setAlignment(Pos.CENTER);
 
         Button addP = new Button("Make Payment");
         addP.setPrefSize(100, 20);
         addP.setOnAction(event -> makePayment(true));
 
-        Button delP = new Button("View Payment");
+        Button delP = new Button("Edit Payment");
         delP.setPrefSize(100, 20);
         delP.setOnAction(event -> makePayment(false));
 
         VBox vbox = genVBox();
-        vbox.getChildren().addAll(spacer4, dueLabel, addP, delP, spacer3);
+        vbox.getChildren().addAll(payLabel, dueLabel, addP, delP, spacer3);
 
         BorderPane border = new BorderPane();
         border.setTop(hbox);
@@ -528,7 +532,7 @@ public class BillView {
         border.setBottom(pview);
 
         viewStage.setScene(new Scene(border));
-        viewStage.setTitle("Entry Details");
+        viewStage.setTitle("Entry and Payment Details");
         viewStage.setMinHeight(300);
         viewStage.setMinWidth(600);
     }
@@ -708,7 +712,7 @@ public class BillView {
     private void delEntry() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Delete Entry");
-        alert.setHeaderText("Warning! This entry and its payments will be deleted.");
+        alert.setHeaderText("Warning! This invoice and ALL ASSOCIATED PAYMENTS will be deleted.");
         alert.setContentText("Proceed?");
         Optional<ButtonType> result = alert.showAndWait();
         if (result.get() == ButtonType.OK) {
@@ -771,6 +775,9 @@ public class BillView {
 
     protected void setDueLabel(float amountDue) {
         this.amountDue = amountDue;
+        if (amountDue < 0) dueLabel.setTextFill(Color.DARKORANGE);
+        else if (amountDue == 0) dueLabel.setTextFill(Color.GREEN);
+        else dueLabel.setTextFill(Color.RED);
         this.dueLabel.setText("Due: "+String.format("%.2f",amountDue));
     }
 
