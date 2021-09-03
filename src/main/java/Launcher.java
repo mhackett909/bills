@@ -266,7 +266,6 @@ public class Launcher extends Application {
                         String notes = rs.getString(6);
                         billData.addEntry(id, name, date, amount, status, notes);
                     }
-                    billView.popTView(billData.getEntries());
                 } catch (SQLException t) {
                     t.printStackTrace();
                 }
@@ -278,8 +277,11 @@ public class Launcher extends Application {
         execTask.setOnFailed(e -> billView.progressBar(false, execTask.progressProperty()));
         execTask.setOnCancelled(e -> billView.progressBar(false, execTask.progressProperty()));
         execTask.setOnSucceeded(e -> billView.progressBar(false, execTask.progressProperty()));
-
         new Thread(execTask).start();
+    }
+
+    protected void popTView() {
+        billView.popTView(billData.getEntries());
     }
 
     protected void paymentPop(int id) {

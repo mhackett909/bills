@@ -363,7 +363,10 @@ public class BillView {
             progressStage.setScene(new Scene(new StackPane(progressBar), 100, 25));
             progressStage.setAlwaysOnTop(true);
             progressStage.show();
-        }else progressStage.hide();
+        }else {
+            controller.popTView();
+            progressStage.hide();
+        }
     }
 
     //Edit Bill Stage
