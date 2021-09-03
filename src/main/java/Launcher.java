@@ -5,6 +5,7 @@ import javafx.concurrent.Task;
 import javafx.stage.Stage;
 import java.sql.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 
 public class Launcher extends Application {
     private BillView billView;
@@ -343,6 +344,62 @@ public class Launcher extends Application {
             ps.setInt(1, id);
             ps.executeUpdate();
         }catch (SQLException t) { t.printStackTrace(); }
+    }
+
+    protected void stats() {
+        try {
+            //TODO Note that this solution only allows 65,535 entries... (two bytes max num_params for prepared statements)
+            ArrayList<String> list = new ArrayList<>();
+            for (BillData.Entry entry : billData.getEntries()) {
+                list.add(Integer.toString(entry.getId()));
+            }
+            if (list.size() == 0) list.add("-1"); //dummy value
+
+            String fullList="";
+            for (String next : list) fullList += next + ",";
+            fullList = fullList.substring(0, fullList.length() - 1);
+
+            int invoiceCount = 0;
+            float totalBilled, totalPaid, avgBill, avgPay, highBill, highPay, totalDue, totalOverpaid;
+            totalBilled = totalPaid = avgBill = avgPay = highBill = highPay = totalDue = totalOverpaid = 0;
+
+            String stats = "select count(e.name) as InvoiceCount, sum(e.amount) as TotalBilled, avg(e.amount) as AverageBill, " +
+                    "sum(p.amount) as TotalPaid, avg(p.amount) as AveragePaid, max(e.amount) as HighestBill, " +
+                    "max(p.amount) as HighestPayment from entry e left join payment p on e.id=p.entryid " +
+                    "where e.id in ("+fullList+")";
+
+            String due = "select (sum(e.amount) - sum(p.amount)) as TotalDue from entry e left join payment p " +
+                    "on e.id=p.entryID where status=0 and e.id in ("+fullList+")";
+
+            String overpaid = "select (sum(p.amount)-sum(e.amount)) as TotalOverpaid from entry e left join payment " +
+                    "p on e.id=p.entryID where status=2 and e.id in ("+fullList+")";
+
+            Connection conn = getConnection();
+            PreparedStatement ps1 = conn.prepareStatement(stats);
+            ResultSet rs1=ps1.executeQuery();
+            while (rs1.next()) {
+                invoiceCount = rs1.getInt(1);
+                totalBilled = rs1.getFloat(2);
+                avgBill = rs1.getFloat(3);
+                totalPaid = rs1.getFloat(4);
+                avgPay = rs1.getFloat(5);
+                highBill = rs1.getFloat(6);
+                highPay = rs1.getFloat(7);
+
+            }
+            PreparedStatement ps2 = conn.prepareStatement(due);
+            ResultSet rs2=ps2.executeQuery();
+            while (rs2.next()) {
+                totalDue = rs2.getFloat(1);
+            }
+            PreparedStatement ps3 = conn.prepareStatement(overpaid);
+            ResultSet rs3=ps3.executeQuery();
+            while (rs3.next()) {
+                totalOverpaid = rs3.getFloat(1);
+            }
+            billView.setStats(invoiceCount, totalBilled, totalPaid, avgBill, avgPay, highBill, highPay, totalDue, totalOverpaid);
+
+        } catch (SQLException t) { t.printStackTrace();  }
     }
 
     //Database connection

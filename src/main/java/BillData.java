@@ -29,6 +29,7 @@ public class BillData {
     public void addPayment(int id, int entryID, Date date, float amount, String type, String medium, String notes) {
         payments.add(new Payment(id, entryID, date, amount, type, medium, notes));
     }
+
     public class Bill {
         private String name;
         private boolean isActive;

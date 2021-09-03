@@ -28,6 +28,7 @@ public class BillView {
     private HBox paymentHBox;
     private VBox paymentVBox;
     private VBox leftvbox, midvbox, rightvbox; //entry view window
+    private VBox statLeft, statRight; //stat window
     private int currentEntryID, currentPaymentID;
     private boolean newPayment;
     private float amountDue;
@@ -1053,6 +1054,105 @@ public class BillView {
         }
     }
 
+    //Statistics stage
+    protected void initStatStage() {
+        statStage = new Stage();
+
+        statStage.initModality(Modality.WINDOW_MODAL);
+        statStage.initOwner(primaryStage);
+
+        Label title = new Label("Statistics");
+        title.setPrefSize(200, 25);
+        title.setStyle("-fx-font: normal bold 18 Arial;");
+        title.setTextFill(Color.WHITE);
+        title.setAlignment(Pos.CENTER);
+
+        Label invoiceCountLabel = new Label();
+        invoiceCountLabel.setStyle("-fx-font: normal bold 14 Arial;");
+
+        Label totalBilledLabel = new Label();
+        totalBilledLabel.setStyle("-fx-font: normal bold 14 Arial;");
+
+        Label totalPaidLabel = new Label();
+        totalPaidLabel.setStyle("-fx-font: normal bold 14 Arial;");
+        totalPaidLabel.setTextFill(Color.GREEN);
+
+        Label totalDueLabel = new Label();
+        totalDueLabel.setStyle("-fx-font: normal bold 14 Arial;");
+        totalDueLabel.setTextFill(Color.RED);
+
+        Label totalOverPaidLabel = new Label();
+        totalOverPaidLabel.setStyle("-fx-font: normal bold 14 Arial;");
+        totalOverPaidLabel.setTextFill(Color.DARKORANGE);
+
+        Label avgBillLabel = new Label();
+        avgBillLabel.setStyle("-fx-font: normal bold 14 Arial;");
+
+        Label avgPayLabel = new Label();
+        avgPayLabel.setStyle("-fx-font: normal bold 14 Arial;");
+
+        Label highBillLabel= new Label();
+        highBillLabel.setStyle("-fx-font: normal bold 14 Arial;");
+
+        Label highPayLabel = new Label();
+        highPayLabel.setStyle("-fx-font: normal bold 14 Arial;");
+
+        Button done = new Button("Done");
+        done.setPrefSize(100, 20);
+        done.setOnAction(e -> closeStats());
+
+        HBox top = genHBox();
+        top.getChildren().add(title);
+
+        statLeft = genVBox();
+        statLeft.getChildren().addAll(invoiceCountLabel, totalBilledLabel, totalPaidLabel, totalDueLabel, totalOverPaidLabel);
+
+        statRight = genVBox();
+        statRight.getChildren().addAll(avgBillLabel, avgPayLabel, highBillLabel, highPayLabel);
+
+        HBox bottom = genHBox();
+        bottom.getChildren().add(done);
+
+        BorderPane border = new BorderPane();
+        border.setTop(top);
+        border.setLeft(statLeft);
+        border.setRight(statRight);
+        border.setBottom(bottom);
+
+        statStage.setScene(new Scene(border));
+        statStage.setTitle("Statistics");
+        statStage.setResizable(false);
+
+    }
+
+    //Statistics stage helper methods
+    protected void stats() {
+        initStatStage();
+        controller.stats();
+        statStage.showAndWait();
+    }
+
+    private void closeStats() { statStage.close(); }
+
+    protected void setStats(int invoiceCount, float totalBilled, float totalPaid, float avgBill, float avgPay, float highBill,
+                         float highPay, float totalDue, float totalOverPaid) {
+
+        ((Label) statLeft.getChildren().get(0)).setText("Invoices: "+invoiceCount);
+        ((Label) statLeft.getChildren().get(1)).setText("Total Billed: $"+String.format("%.2f",totalBilled));
+
+        ((Label) statLeft.getChildren().get(2)).setText("Paid: $"+String.format("%.2f", totalPaid));
+
+        ((Label) statLeft.getChildren().get(3)).setText("Due: $"+String.format("%.2f", totalDue));
+        ((Label) statLeft.getChildren().get(4)).setText("OverPaid: $"+String.format("%.2f", totalOverPaid));
+
+        ((Label) statRight.getChildren().get(0)).setText("Average bill: $"+String.format("%.2f", avgBill));
+
+        ((Label) statRight.getChildren().get(1)).setText("Average payment: $"+String.format("%.2f", avgPay));
+        ((Label) statRight.getChildren().get(2)).setText("Highest bill: $"+String.format("%.2f", highBill));
+        ((Label) statRight.getChildren().get(3)).setText("Highest payment: $"+String.format("%.2f", highPay));
+
+    }
+
     private VBox genVBox() {
         VBox vbox = new VBox();
         vbox.setPadding(new Insets(15, 12, 15, 12));
@@ -1080,10 +1180,6 @@ public class BillView {
         pview.setItems(entries);
     }
 
-    private void stats() {
-        System.out.println("Stats");
-        statStage = new Stage();
-    }
 
     private void pageLeft() {
         System.out.println("Page left");
