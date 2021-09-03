@@ -370,7 +370,7 @@ public class Launcher extends Application {
                     "max(p.amount) as HighestPayment from entry e left join payment p on e.id=p.entryid " +
                     "where e.id in ("+fullList+")";
 
-            String due = "select (sum(e.amount) - sum(p.amount)) as TotalDue from entry e left join payment p " +
+            String due = "select (sum(e.amount) - ifnull(sum(p.amount),0)) as TotalDue from entry e left join payment p " +
                     "on e.id=p.entryID where status=0 and e.id in ("+fullList+")";
 
             String overpaid = "select (sum(p.amount)-sum(e.amount)) as TotalOverpaid from entry e left join payment " +
