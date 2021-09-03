@@ -1,8 +1,12 @@
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -16,7 +20,7 @@ import java.util.Optional;
 
 public class BillView {
     private Stage primaryStage, searchStage, newStage, editStage;
-    private Stage viewStage, paymentStage, statStage;
+    private Stage viewStage, paymentStage, statStage, progressStage;
     private VBox topSearchBox, leftSearchBox, rightSearchBox; //search window
     private VBox topNewBox, centerNewBox; //new entry window
     private VBox centerEditBill; //bill edit window
@@ -298,12 +302,13 @@ public class BillView {
 
         newCombo = new ComboBox();
         newCombo.setPrefSize(200, 20);
+        newCombo.setPromptText("Select a bill...");
 
-        Button newBill = new Button("New");
+        Button newBill = new Button("Add Bill");
         newBill.setPrefSize(100, 20);
         newBill.setOnAction(event -> createBill());
 
-        Button viewBill = new Button("View/Edit");
+        Button viewBill = new Button("Edit Bill");
         viewBill.setPrefSize(100, 20);
         viewBill.setOnAction(event -> editBill());
 
@@ -347,6 +352,17 @@ public class BillView {
 
         hbox.getChildren().addAll(submit);
         return hbox;
+    }
+
+    protected void progressBar(boolean show, ReadOnlyDoubleProperty taskProperty) {
+        if (show) {
+            ProgressBar progressBar = new ProgressBar(0);
+            progressBar.progressProperty().bind(taskProperty);
+            progressStage = new Stage();
+            progressStage.setScene(new Scene(new StackPane(progressBar), 100, 25));
+            progressStage.setAlwaysOnTop(true);
+            progressStage.show();
+        }else progressStage.hide();
     }
 
     //Edit Bill Stage

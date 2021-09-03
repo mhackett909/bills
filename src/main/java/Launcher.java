@@ -1,6 +1,7 @@
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.stage.Stage;
 import java.sql.*;
 import java.time.LocalDate;
@@ -135,10 +136,10 @@ public class Launcher extends Application {
     protected void loadBills() {
         try {
             billData.initBills();
+            billData.addBill("All Bills", true);
             Connection conn = getConnection();
             PreparedStatement ps = conn.prepareStatement("select * from bill");
             ResultSet rs = ps.executeQuery();
-            billData.addBill("All Bills", true);
             while(rs.next()) {
                 billData.addBill(rs.getString(1), rs.getBoolean(2));
             }
@@ -245,24 +246,39 @@ public class Launcher extends Application {
     }
 
     protected void entryPop(String statement) {
-        try {
-            billData.initEntries();
-            Connection conn = getConnection();
-            PreparedStatement ps = conn.prepareStatement(statement);
-            //System.out.println("Exec: "+statement);
-            lastQuery = statement;
-            ResultSet rs = ps.executeQuery();
-            while(rs.next()) {
-                int id = rs.getInt(1);
-                String name = rs.getString(2);
-                Date date = rs.getDate(3);
-                float amount = rs.getFloat(4);
-                int status = rs.getInt(5);
-                String notes = rs.getString(6);
-                billData.addEntry(id, name, date, amount, status, notes);
+        Task execTask = new Task() {
+            @Override
+            protected Object call() {
+                try {
+                    billData.initEntries();
+                    Connection conn = getConnection();
+                    PreparedStatement ps = conn.prepareStatement(statement);
+                    //System.out.println("Exec: "+statement);
+                    lastQuery = statement;
+                    ResultSet rs = ps.executeQuery();
+                    while (rs.next()) {
+                        int id = rs.getInt(1);
+                        String name = rs.getString(2);
+                        Date date = rs.getDate(3);
+                        float amount = rs.getFloat(4);
+                        int status = rs.getInt(5);
+                        String notes = rs.getString(6);
+                        billData.addEntry(id, name, date, amount, status, notes);
+                    }
+                    billView.popTView(billData.getEntries());
+                } catch (SQLException t) {
+                    t.printStackTrace();
+                }
+                updateProgress(1,1);
+                return null;
             }
-            billView.popTView(billData.getEntries());
-        }catch (SQLException t) { t.printStackTrace(); }
+        };
+        execTask.setOnScheduled(e -> billView.progressBar(true, execTask.progressProperty()));
+        execTask.setOnFailed(e -> billView.progressBar(false, execTask.progressProperty()));
+        execTask.setOnCancelled(e -> billView.progressBar(false, execTask.progressProperty()));
+        execTask.setOnSucceeded(e -> billView.progressBar(false, execTask.progressProperty()));
+
+        new Thread(execTask).start();
     }
 
     protected void paymentPop(int id) {
