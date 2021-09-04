@@ -127,6 +127,7 @@ public class BillView {
 
         TableColumn<BillData.Entry, String> column1 = new TableColumn<>("Name");
         column1.setCellValueFactory(new PropertyValueFactory<>("name"));
+        column1.setPrefWidth(200);
 
         TableColumn<BillData.Entry, Date> column2 = new TableColumn<>("Date");
         column2.setCellValueFactory(new PropertyValueFactory<>("date"));
@@ -139,6 +140,7 @@ public class BillView {
 
         TableColumn<BillData.Entry, String> column5 = new TableColumn<>("Notes");
         column5.setCellValueFactory(new PropertyValueFactory<>("notes"));
+        column5.setPrefWidth(300);
 
         tView.getColumns().addAll(column0, column1, column2, column3, column4, column5);
         return tView;
@@ -472,6 +474,10 @@ public class BillView {
         spacer3.setMinSize(1,20);
         VBox.setVgrow(spacer3, Priority.ALWAYS);
 
+        Pane spacer4 = new Pane();
+        spacer4.setMinSize(1,20);
+        VBox.setVgrow(spacer4, Priority.ALWAYS);
+
         //HBox has 3 VBoxes
         leftvbox = genVBox();
         midvbox = genVBox();
@@ -544,7 +550,7 @@ public class BillView {
         delP.setOnAction(event -> makePayment(false));
 
         VBox vbox = genVBox();
-        vbox.getChildren().addAll(payLabel, dueLabel, addP, delP, spacer3);
+        vbox.getChildren().addAll(spacer3, payLabel, dueLabel, addP, delP, spacer4);
 
         BorderPane border = new BorderPane();
         border.setTop(hbox);
@@ -635,12 +641,15 @@ public class BillView {
 
         TableColumn<BillData.Payment, String> column4 = new TableColumn<>("Method");
         column4.setCellValueFactory(new PropertyValueFactory<>("method"));
+        column4.setPrefWidth(120);
 
         TableColumn<BillData.Payment, String> column5 = new TableColumn<>("Medium");
         column5.setCellValueFactory(new PropertyValueFactory<>("medium"));
+        column5.setPrefWidth(120);
 
         TableColumn<BillData.Payment, String> column6 = new TableColumn<>("Notes");
         column6.setCellValueFactory(new PropertyValueFactory<>("notes"));
+        column6.setPrefWidth(300);
 
         pView.getColumns().addAll(column0, column1, column2, column3, column4, column5, column6);
         pView.setPrefHeight(200);
