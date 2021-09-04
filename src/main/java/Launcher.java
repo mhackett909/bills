@@ -373,8 +373,16 @@ public class Launcher extends Application {
             String due = "select (sum(e.amount) - ifnull(sum(p.amount),0)) as TotalDue from entry e left join payment p " +
                     "on e.id=p.entryID where status=0 and e.id in ("+fullList+")";
 
-            String overpaid = "select sum(p.amount) as TotalOverpaid from entry e left join payment " +
+            String overpayView = "create view overPayments as select sum(p.amount) as paymentSum from entry e join payment " +
                     "p on e.id=p.entryID where status=2 and e.id in ("+fullList+")";
+
+            String overtotalView = "create view overTotal as select sum(e.amount) as amountSum from entry e where status=2 " +
+                    "and e.id in ("+fullList+")";
+
+            String overpaid = "select sum(paymentSum)-sum(amountSum) from overTotal join overPayments";
+
+            String dropoverPay = "drop view overPayments";
+            String dropoverTotal = "drop view overTotal";
 
             Connection conn = getConnection();
             PreparedStatement ps1 = conn.prepareStatement(stats);
@@ -394,11 +402,22 @@ public class Launcher extends Application {
             while (rs2.next()) {
                 totalDue = rs2.getFloat(1);
             }
-            PreparedStatement ps3 = conn.prepareStatement(overpaid);
-            ResultSet rs3=ps3.executeQuery();
+            PreparedStatement ps3 = conn.prepareStatement(overpayView);
+            PreparedStatement ps4 = conn.prepareStatement(overtotalView);
+
+            ps3.execute();
+            ps4.execute();
+
+            PreparedStatement ps5 = conn.prepareStatement(overpaid);
+            ResultSet rs3=ps5.executeQuery();
             while (rs3.next()) {
                 totalOverpaid = rs3.getFloat(1);
             }
+            PreparedStatement ps6 = conn.prepareStatement(dropoverPay);
+            PreparedStatement ps7 = conn.prepareStatement(dropoverTotal);
+            ps6.execute();
+            ps7.execute();
+
             billView.setStats(invoiceCount, totalBilled, totalPaid, avgBill, avgPay, highBill, highPay, totalDue, totalOverpaid);
 
         } catch (SQLException t) { t.printStackTrace();  }
