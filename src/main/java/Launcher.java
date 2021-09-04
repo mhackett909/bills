@@ -94,7 +94,7 @@ public class Launcher extends Application {
     protected void popNewCombo(boolean all) {
         ObservableList<String> items = FXCollections.observableArrayList();
         for (BillData.Bill bill : billData.getBills()) {
-            if (bill.getName().equals("All Bills")) continue;
+            if (bill.getName().equals("All Billers")) continue;
             if (bill.isActive() || all) items.add(bill.getName());
         }
         billView.popNewCombo(items);
@@ -124,11 +124,11 @@ public class Launcher extends Application {
     }
     protected boolean verifyName(String newBill) {
         newBill = newBill.toLowerCase();
-        if (newBill.equals("") || newBill.equals("all bills")) return false;
+        if (newBill.equals("") || newBill.equals("all billers")) return false;
         String oldBill;
         for (BillData.Bill bill : billData.getBills()) {
             oldBill = bill.getName().toLowerCase();
-            if (oldBill.equals("all bills")) continue;
+            if (oldBill.equals("all billers")) continue;
             if (oldBill.equals(newBill)) return false;
         }
         return true;
@@ -137,7 +137,7 @@ public class Launcher extends Application {
     protected void loadBills() {
         try {
             billData.initBills();
-            billData.addBill("All Bills", true);
+            billData.addBill("All Billers", true);
             Connection conn = getConnection();
             PreparedStatement ps = conn.prepareStatement("select * from bill");
             ResultSet rs = ps.executeQuery();

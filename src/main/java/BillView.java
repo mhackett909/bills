@@ -305,20 +305,20 @@ public class BillView {
 
         newCombo = new ComboBox();
         newCombo.setPrefSize(200, 20);
-        newCombo.setPromptText("Select a bill...");
+        newCombo.setPromptText("Select a biller...");
 
-        Button newBill = new Button("Add Bill");
+        Button newBill = new Button("Add biller");
         newBill.setPrefSize(100, 20);
         newBill.setOnAction(event -> createBill());
 
-        Button viewBill = new Button("Edit Bill");
+        Button viewBill = new Button("Modify biller");
         viewBill.setPrefSize(100, 20);
         viewBill.setOnAction(event -> editBill());
 
         HBox hbox = new HBox();
         hbox.getChildren().addAll(newBill, viewBill);
 
-        newBillchk = new CheckBox("Include Inactive");
+        newBillchk = new CheckBox("Include inactive billers");
         newBillchk.setTextFill(Color.WHITE);
         newBillchk.setOnAction(event -> controller.popNewCombo(newBillchk.isSelected()));
 
@@ -328,6 +328,11 @@ public class BillView {
 
     private VBox centerNewBox() {
         VBox vbox = genVBox();
+
+        Label entryLabel = new Label("New Invoice");
+        entryLabel.setPrefSize(120, 25);
+        entryLabel.setStyle("-fx-font: normal bold 16 Arial;");
+        entryLabel.setAlignment(Pos.CENTER);
 
         DatePicker date = new DatePicker();
         date.setPrefSize(100, 20);
@@ -341,7 +346,7 @@ public class BillView {
         notes.setPromptText("Notes");
         notes.setPrefSize(200, 20);
 
-        vbox.getChildren().addAll(date, amount, notes);
+        vbox.getChildren().addAll(entryLabel, date, amount, notes);
         return vbox;
     }
 
@@ -380,7 +385,7 @@ public class BillView {
         if (currentBill.equals("")) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
-            alert.setHeaderText("No Bill Selected");
+            alert.setHeaderText("No Biller Selected");
             alert.setContentText("Please select or create one");
             alert.showAndWait();
             return;
@@ -399,7 +404,7 @@ public class BillView {
         border.setBottom(bottomEditBill);
 
         editStage.setScene(new Scene(border));
-        editStage.setTitle("View/Edit Bill");
+        editStage.setTitle("Modify Biller");
         editStage.setResizable(false);
 
         editStage.showAndWait();
@@ -445,7 +450,7 @@ public class BillView {
         save.setOnAction(event -> saveBill());
         save.setDisable(true);
 
-        Button del = new Button("Delete");
+        Button del = new Button("Delete Biller");
         del.setPrefSize(100, 20);
         del.setOnAction(event -> delBill());
         del.setTextFill(Color.RED);
@@ -484,7 +489,7 @@ public class BillView {
         rightvbox = genVBox();
 
         //Left VBox
-        Label entryName = new Label("Bill Name");
+        Label entryName = new Label("Biller Name");
         entryName.setTextFill(Color.WHITE);
         entryName.setAlignment(Pos.CENTER);
         entryName.setPrefSize(150, 20);
@@ -542,11 +547,11 @@ public class BillView {
         dueLabel.setAlignment(Pos.CENTER);
 
         Button addP = new Button("Make Payment");
-        addP.setPrefSize(100, 20);
+        addP.setPrefSize(120, 20);
         addP.setOnAction(event -> makePayment(true));
 
-        Button delP = new Button("Edit Payment");
-        delP.setPrefSize(100, 20);
+        Button delP = new Button("Modify Payment");
+        delP.setPrefSize(120, 20);
         delP.setOnAction(event -> makePayment(false));
 
         VBox vbox = genVBox();
@@ -619,7 +624,7 @@ public class BillView {
         border.setMinWidth(200);
 
         paymentStage.setScene(new Scene(border));
-        paymentStage.setTitle(newPayment?"Make Payment":"View Payment");
+        paymentStage.setTitle(newPayment?"Make Payment":"Modify Payment");
     }
 
     private TableView pView() {
@@ -676,8 +681,8 @@ public class BillView {
         }else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
-            alert.setHeaderText("Cannot Modify: Bill already exists");
-            alert.setContentText("It may also be an in invalid name");
+            alert.setHeaderText("Cannot Modify: Biller already exists");
+            alert.setContentText("It may also be an invalid name");
             alert.showAndWait();
         }
     }
@@ -687,7 +692,7 @@ public class BillView {
         String oldName = ((ComboBox) topNewBox.getChildren().get(0)).getSelectionModel().getSelectedItem().toString();
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Delete Bill");
+        alert.setTitle("Delete Biller");
         alert.setHeaderText("Warning! This will DELETE ALL ENTRIES.");
         alert.setContentText("Are you really sure?");
         Optional<ButtonType> result = alert.showAndWait();
@@ -941,7 +946,7 @@ public class BillView {
         statement.append(" entry.status in (");
         statement.append(fullList);
         statement.append(")");
-        boolean allBills = bill.equals("All Bills");
+        boolean allBills = bill.equals("All Billers");
         if (!allBills) {
             statement.append(" and bill.name=\'");
             statement.append(bill);
@@ -1017,12 +1022,12 @@ public class BillView {
         }catch (Exception e) { }
         float amount = -1f;
         try {
-            amount = Float.parseFloat(((TextField) centerNewBox.getChildren().get(1)).getText());
+            amount = Float.parseFloat(((TextField) centerNewBox.getChildren().get(2)).getText());
         }catch (NumberFormatException e) { }
         if (name.equals("")) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
-            alert.setHeaderText("No Bill Selected");
+            alert.setHeaderText("No Biller Selected");
             alert.setContentText("Please select or create one");
             alert.showAndWait();
             return;
@@ -1034,8 +1039,8 @@ public class BillView {
             alert.showAndWait();
             return;
         }
-        LocalDate date = ((DatePicker) centerNewBox.getChildren().get(0)).getValue();
-        String notes = ((TextField) centerNewBox.getChildren().get(2)).getText();
+        LocalDate date = ((DatePicker) centerNewBox.getChildren().get(1)).getValue();
+        String notes = ((TextField) centerNewBox.getChildren().get(3)).getText();
         controller.insertNewEntry(name, date, amount, notes);
         newStage.close();
         controller.entryPop("select * from entry join bill on bill.name=entry.name where entry.name=\'"+name+"\' " +
@@ -1044,9 +1049,9 @@ public class BillView {
 
     private void createBill() {
         TextInputDialog input = new TextInputDialog();
-        input.setTitle("Create Bill");
-        input.setHeaderText("Enter a bill name:");
-        input.setContentText("Bill:");
+        input.setTitle("Add Biller");
+        input.setHeaderText("Enter biller name:");
+        input.setContentText("Biller:");
         Optional<String> result = input.showAndWait();
         if (result.isPresent()) {
             String bill = result.get().strip();
@@ -1059,7 +1064,7 @@ public class BillView {
             else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");
-                alert.setHeaderText("Cannot create: Bill already exists");
+                alert.setHeaderText("Cannot create: Biller already exists");
                 alert.setContentText("Its name may also be invalid. Perhaps include inactive?");
                 alert.showAndWait();
             }
