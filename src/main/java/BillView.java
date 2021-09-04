@@ -12,6 +12,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.sql.Date;
@@ -1096,9 +1098,20 @@ public class BillView {
         Label totalBilledLabel = new Label();
         totalBilledLabel.setStyle("-fx-font: normal bold 14 Arial;");
 
-        Label totalPaidLabel = new Label();
-        totalPaidLabel.setStyle("-fx-font: normal bold 14 Arial;");
-        totalPaidLabel.setTextFill(Color.GREEN);
+       // Label totalPaidLabel = new Label();
+       // totalPaidLabel.setStyle("-fx-font: normal bold 14 Arial;");
+       // totalPaidLabel.setTextFill(Color.GREEN);
+
+        Text regTotal = new Text();
+        regTotal.setStyle("-fx-font: normal bold 14 Arial;");
+        regTotal.setFill(Color.GREEN);
+
+        Text overTotal = new Text();
+        overTotal.setStyle("-fx-font: normal bold 14 Arial;");
+        overTotal.setFill(Color.DARKORANGE);
+
+        TextFlow textFlowPane = new TextFlow();
+        textFlowPane.getChildren().addAll(regTotal, overTotal);
 
         Label totalDueLabel = new Label();
         totalDueLabel.setStyle("-fx-font: normal bold 14 Arial;");
@@ -1128,10 +1141,12 @@ public class BillView {
         top.getChildren().add(title);
 
         statLeft = genVBox();
-        statLeft.getChildren().addAll(invoiceCountLabel, totalBilledLabel, totalPaidLabel, totalDueLabel, totalOverPaidLabel);
+        statLeft.getChildren().addAll(invoiceCountLabel, totalBilledLabel, textFlowPane, totalDueLabel, totalOverPaidLabel);
+        statLeft.setAlignment(Pos.BASELINE_LEFT);
 
         statRight = genVBox();
         statRight.getChildren().addAll(avgBillLabel, avgPayLabel, highBillLabel, highPayLabel);
+        statRight.setAlignment(Pos.BASELINE_RIGHT);
 
         HBox bottom = genHBox();
         bottom.getChildren().add(done);
@@ -1164,7 +1179,14 @@ public class BillView {
         ((Label) statLeft.getChildren().get(0)).setText("Invoices: "+invoiceCount);
         ((Label) statLeft.getChildren().get(1)).setText("Total Billed: $"+String.format("%.2f",totalBilled));
 
-        ((Label) statLeft.getChildren().get(2)).setText("Paid: $"+String.format("%.2f", totalPaid));
+        TextFlow totalPane = (TextFlow) statLeft.getChildren().get(2);
+        Text regTotal = (Text) totalPane.getChildren().get(0);
+        Text overTotal = (Text) totalPane.getChildren().get(1);
+
+        regTotal.setText("Paid: $"+String.format("%.2f", totalPaid));
+        overTotal.setText(totalOverPaid > 0 ? " (+$"+totalOverPaid+")":"");
+
+       // ((Label) statLeft.getChildren().get(2)).setText("Paid: $"+String.format("%.2f", totalPaid));
 
         ((Label) statLeft.getChildren().get(3)).setText("Due: $"+String.format("%.2f", totalDue));
         ((Label) statLeft.getChildren().get(4)).setText("OverPaid: $"+String.format("%.2f", totalOverPaid));
