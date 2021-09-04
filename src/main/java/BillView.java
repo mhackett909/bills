@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -58,6 +59,7 @@ public class BillView {
 
         primaryStage.setScene(new Scene(border));
         primaryStage.setTitle("Bill Manager V4");
+        primaryStage.getIcons().add(new Image("dollarsign.png"));
         primaryStage.setMinHeight(500);
         primaryStage.setMinWidth(800);
     }
