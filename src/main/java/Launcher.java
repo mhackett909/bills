@@ -373,7 +373,7 @@ public class Launcher extends Application {
             String due = "select (sum(e.amount) - ifnull(sum(p.amount),0)) as TotalDue from entry e left join payment p " +
                     "on e.id=p.entryID where status=0 and e.id in ("+fullList+")";
 
-            String overpaid = "select (sum(p.amount)-sum(e.amount)) as TotalOverpaid from entry e left join payment " +
+            String overpaid = "select sum(p.amount) as TotalOverpaid from entry e left join payment " +
                     "p on e.id=p.entryID where status=2 and e.id in ("+fullList+")";
 
             Connection conn = getConnection();

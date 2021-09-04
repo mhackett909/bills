@@ -1098,10 +1098,6 @@ public class BillView {
         Label totalBilledLabel = new Label();
         totalBilledLabel.setStyle("-fx-font: normal bold 14 Arial;");
 
-       // Label totalPaidLabel = new Label();
-       // totalPaidLabel.setStyle("-fx-font: normal bold 14 Arial;");
-       // totalPaidLabel.setTextFill(Color.GREEN);
-
         Text regTotal = new Text();
         regTotal.setStyle("-fx-font: normal bold 14 Arial;");
         regTotal.setFill(Color.GREEN);
@@ -1161,7 +1157,6 @@ public class BillView {
         statStage.setTitle("Statistics");
         statStage.getIcons().add(new Image("dollarsign.png"));
         statStage.setResizable(false);
-
     }
 
     //Statistics stage helper methods
@@ -1186,8 +1181,6 @@ public class BillView {
         regTotal.setText("Paid: $"+String.format("%.2f", totalPaid));
         overTotal.setText(totalOverPaid > 0 ? " (+$"+totalOverPaid+")":"");
 
-       // ((Label) statLeft.getChildren().get(2)).setText("Paid: $"+String.format("%.2f", totalPaid));
-
         ((Label) statLeft.getChildren().get(3)).setText("Due: $"+String.format("%.2f", totalDue));
         ((Label) statLeft.getChildren().get(4)).setText("OverPaid: $"+String.format("%.2f", totalOverPaid));
 
@@ -1196,7 +1189,6 @@ public class BillView {
         ((Label) statRight.getChildren().get(1)).setText("Average payment: $"+String.format("%.2f", avgPay));
         ((Label) statRight.getChildren().get(2)).setText("Highest bill: $"+String.format("%.2f", highBill));
         ((Label) statRight.getChildren().get(3)).setText("Highest payment: $"+String.format("%.2f", highPay));
-
     }
 
     private VBox genVBox() {
