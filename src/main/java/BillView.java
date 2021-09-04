@@ -166,6 +166,7 @@ public class BillView {
 
         searchStage.setScene(new Scene(border));
         searchStage.setTitle("Search");
+        searchStage.getIcons().add(new Image("dollarsign.png"));
         searchStage.setResizable(false);
     }
 
@@ -297,6 +298,7 @@ public class BillView {
 
         newStage.setScene(new Scene(border));
         newStage.setTitle("New Invoice");
+        newStage.getIcons().add(new Image("dollarsign.png"));
         newStage.setResizable(false);
     }
 
@@ -406,6 +408,7 @@ public class BillView {
 
         editStage.setScene(new Scene(border));
         editStage.setTitle("Modify Biller");
+        editStage.getIcons().add(new Image("dollarsign.png"));
         editStage.setResizable(false);
 
         editStage.showAndWait();
@@ -565,6 +568,7 @@ public class BillView {
 
         viewStage.setScene(new Scene(border));
         viewStage.setTitle("Entry and Payment Details");
+        viewStage.getIcons().add(new Image("dollarsign.png"));
         viewStage.setMinHeight(300);
         viewStage.setMinWidth(600);
     }
@@ -626,6 +630,7 @@ public class BillView {
 
         paymentStage.setScene(new Scene(border));
         paymentStage.setTitle(newPayment?"Make Payment":"Modify Payment");
+        paymentStage.getIcons().add(new Image("dollarsign.png"));
     }
 
     private TableView pView() {
@@ -1139,6 +1144,7 @@ public class BillView {
 
         statStage.setScene(new Scene(border));
         statStage.setTitle("Statistics");
+        statStage.getIcons().add(new Image("dollarsign.png"));
         statStage.setResizable(false);
 
     }
