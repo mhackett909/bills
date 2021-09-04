@@ -71,6 +71,7 @@ public class Launcher extends Application {
 
     protected BillData.Entry getEntryByID(int id) {
         for (BillData.Entry entry : billData.getEntries()) {
+            System.out.println(entry.getId());
             if (entry.getId() == id) return entry;
         }
         return null;
@@ -254,7 +255,7 @@ public class Launcher extends Application {
                     billData.initEntries();
                     Connection conn = getConnection();
                     PreparedStatement ps = conn.prepareStatement(statement);
-                    //System.out.println("Exec: "+statement);
+                   //System.out.println("Exec: "+statement);
                     lastQuery = statement;
                     ResultSet rs = ps.executeQuery();
                     while (rs.next()) {
@@ -365,13 +366,11 @@ public class Launcher extends Application {
             float totalBilled, totalPaid, avgBill, avgPay, highBill, highPay, totalDue, totalOverpaid;
             totalBilled = totalPaid = avgBill = avgPay = highBill = highPay = totalDue = totalOverpaid = 0;
 
-            String stats = "select count(e.name) as InvoiceCount, sum(e.amount) as TotalBilled, avg(e.amount) as AverageBill, " +
-                    "sum(p.amount) as TotalPaid, avg(p.amount) as AveragePaid, max(e.amount) as HighestBill, " +
-                    "max(p.amount) as HighestPayment from entry e left join payment p on e.id=p.entryid " +
-                    "where e.id in ("+fullList+")";
+            String invoiceStats = "select count(e.name) as InvoiceCount, sum(e.amount) as TotalBilled, avg(e.amount) as AverageBill, " +
+                    "max(e.amount) as HighestBill from entry e where e.id in ("+fullList+")";
 
-            String due = "select (sum(e.amount) - ifnull(sum(p.amount),0)) as TotalDue from entry e left join payment p " +
-                    "on e.id=p.entryID where status=0 and e.id in ("+fullList+")";
+            String payStats = "select sum(p.amount) as TotalPaid, avg(p.amount) as AveragePaid, max(p.amount) as HighestPayment " +
+                    "from payment p join entry e on p.entryID=e.id where e.id in ("+fullList+")";
 
             String overpayView = "create view overPayments as select sum(p.amount) as paymentSum from entry e join payment " +
                     "p on e.id=p.entryID where status=2 and e.id in ("+fullList+")";
@@ -385,23 +384,23 @@ public class Launcher extends Application {
             String dropoverTotal = "drop view overTotal";
 
             Connection conn = getConnection();
-            PreparedStatement ps1 = conn.prepareStatement(stats);
+            PreparedStatement ps1 = conn.prepareStatement(invoiceStats);
             ResultSet rs1=ps1.executeQuery();
             while (rs1.next()) {
                 invoiceCount = rs1.getInt(1);
                 totalBilled = rs1.getFloat(2);
                 avgBill = rs1.getFloat(3);
-                totalPaid = rs1.getFloat(4);
-                avgPay = rs1.getFloat(5);
-                highBill = rs1.getFloat(6);
-                highPay = rs1.getFloat(7);
-
+                highBill = rs1.getFloat(4);
             }
-            PreparedStatement ps2 = conn.prepareStatement(due);
+
+            PreparedStatement ps2 = conn.prepareStatement(payStats);
             ResultSet rs2=ps2.executeQuery();
             while (rs2.next()) {
-                totalDue = rs2.getFloat(1);
+                totalPaid = rs2.getFloat(1);
+                avgPay = rs2.getFloat(2);
+                highPay = rs2.getFloat(3);
             }
+
             PreparedStatement ps3 = conn.prepareStatement(overpayView);
             PreparedStatement ps4 = conn.prepareStatement(overtotalView);
 
@@ -417,6 +416,10 @@ public class Launcher extends Application {
             PreparedStatement ps7 = conn.prepareStatement(dropoverTotal);
             ps6.execute();
             ps7.execute();
+
+            //Quick maths
+            totalPaid-=totalOverpaid;
+            totalDue = totalBilled - totalPaid;
 
             billView.setStats(invoiceCount, totalBilled, totalPaid, avgBill, avgPay, highBill, highPay, totalDue, totalOverpaid);
 

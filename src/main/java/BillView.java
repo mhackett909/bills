@@ -1,3 +1,4 @@
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -718,8 +719,8 @@ public class BillView {
             controller.loadBills();
             editStage.close();
             newCombo.getSelectionModel().clearSelection();
-            controller.resubmitLastQuery();
             controller.popNewCombo(newBillchk.isSelected());
+            controller.resubmitLastQuery();
         }
     }
 
@@ -788,8 +789,8 @@ public class BillView {
         float difference = entry.getAmount() - oldAmount;
         amountDue+=difference;
         controller.updateEntryStatus(currentEntryID, amountDue);
-        controller.resubmitLastQuery();
         controller.paymentPop(currentEntryID);
+        controller.resubmitLastQuery();
     }
 
     protected void setEntry(String name, boolean status, int e_ID, Date date, float amount, String notes) {
