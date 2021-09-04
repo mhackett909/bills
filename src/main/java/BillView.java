@@ -94,13 +94,7 @@ public class BillView {
         buttonDetails.setPrefSize(100, 20);
         buttonDetails.setOnAction(event -> viewEntry());
 
-        Button buttonPrev = new Button("<<");
-        buttonPrev.setPrefSize(35,20);
-        buttonPrev.setOnAction(event -> pageLeft());
 
-        Button buttonNext = new Button(">>");
-        buttonNext.setPrefSize(35,20);
-        buttonNext.setOnAction(event -> pageRight());
 
         Button buttonStats = new Button("Statistics");
         buttonStats.setPrefSize(100, 20);
@@ -109,13 +103,18 @@ public class BillView {
         Pane spacer = new Pane();
         spacer.setMinSize(10,1);
         HBox.setHgrow(spacer, Priority.ALWAYS);
+        /*
+        Pagination paige_inator = new Pagination();
+        paige_inator.setPageCount(5);
 
         Pane spacer2 = new Pane();
         spacer.setMinSize(10,1);
         HBox.setHgrow(spacer2, Priority.ALWAYS);
 
-        hbox.getChildren().addAll(buttonDetails, spacer, buttonPrev,
-                buttonNext, spacer2, buttonStats);
+        hbox.getChildren().addAll(buttonDetails, spacer, paige_inator, spacer2, buttonStats);
+        */
+
+        hbox.getChildren().addAll(buttonDetails, spacer, buttonStats);
         return hbox;
     }
 
@@ -176,7 +175,7 @@ public class BillView {
         searchCombo = new ComboBox();
         searchCombo.setPrefSize(100,25);
 
-        searchchk = new CheckBox("Include Inactive");
+        searchchk = new CheckBox("Include Inactive Billers");
         searchchk.setTextFill(Color.WHITE);
         searchchk.setOnAction(event -> controller.popSearchCombo(searchchk.isSelected()));
 
@@ -295,7 +294,7 @@ public class BillView {
         border.setBottom(bottomNewBox);
 
         newStage.setScene(new Scene(border));
-        newStage.setTitle("New Entry");
+        newStage.setTitle("New Invoice");
         newStage.setResizable(false);
     }
 
@@ -318,7 +317,7 @@ public class BillView {
         HBox hbox = new HBox();
         hbox.getChildren().addAll(newBill, viewBill);
 
-        newBillchk = new CheckBox("Include inactive billers");
+        newBillchk = new CheckBox("Include Inactive Billers");
         newBillchk.setTextFill(Color.WHITE);
         newBillchk.setOnAction(event -> controller.popNewCombo(newBillchk.isSelected()));
 
@@ -1195,14 +1194,5 @@ public class BillView {
     protected void popPView(ObservableList entries) {
         pview.refresh();
         pview.setItems(entries);
-    }
-
-
-    private void pageLeft() {
-        System.out.println("Page left");
-    }
-
-    private void pageRight() {
-        System.out.println("Page right");
     }
 }
