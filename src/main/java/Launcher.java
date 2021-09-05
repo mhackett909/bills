@@ -71,7 +71,6 @@ public class Launcher extends Application {
 
     protected BillData.Entry getEntryByID(int id) {
         for (BillData.Entry entry : billData.getEntries()) {
-            System.out.println(entry.getId());
             if (entry.getId() == id) return entry;
         }
         return null;

@@ -1180,7 +1180,7 @@ public class BillView {
         Text overTotal = (Text) totalPane.getChildren().get(1);
 
         regTotal.setText("Paid: $"+String.format("%.2f", totalPaid));
-        overTotal.setText(totalOverPaid > 0 ? " (+$"+totalOverPaid+")":"");
+        overTotal.setText(totalOverPaid > 0 ? " (+$"+String.format("%.2f", totalOverPaid)+")":"");
 
         ((Label) statLeft.getChildren().get(3)).setText("Due: $"+String.format("%.2f", totalDue));
         ((Label) statLeft.getChildren().get(4)).setText("OverPaid: $"+String.format("%.2f", totalOverPaid));
